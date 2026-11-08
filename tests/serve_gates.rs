@@ -196,6 +196,24 @@ pin_keys = []
 budget  = { load = "eager", max_payload_mb = 16 }
 
 [[vessel]]
+suite   = "winogrande_jdi"
+class   = "hosted_only"
+posture = { arm = "A0" }                                          # the artifact-less cheap leg (no winner artifact exists for an unserved panel suite — the modelless tier IS the cheap arm, the emotion_syn row's shape; the fit's capture-cheap read 0.4830 ≈ chance, exactly the pre-registered posture)
+# Issue 059's T3 arm (the Bench 091 pre-registered seat, 2026-11-08 — the same delegated-owner GO family + the licence SETTLED MIT, Research 019 finding 1): ESC composed 0.7269 vs cheap 0.4830 (Δ +0.2439, paired LB95 +0.2191 > 0) at rate 51.1% in-window (cal 52.0%, shift −0.9pp inside the 10% guard) — all three arm gates pass; gate rho 0.45 (ESC_GATE_RHOS), thresholds score 0.000 / dist 0.538 (re-fit live at boot on the seat). Think leg = mammoth-1 REMOTE via the esc-systemone-adapter (the SAME think_file + operator-attested weights digest as massive/banking77 — the digest attests the build, not the suite; winogrande's 2-option arity re-verified at the join). The JDI-panel rows are BENCHMARK-conditioned arms: they arm the record + the serve posture for the panel folds, never a real-traffic claim — the contamination shadow read is REQUIRED before any such claim (public WINOGRANDE mammoth-training unverified), and the composed cal→test shift is NOT measured (the rate-transfer guard −0.9pp is the only transfer evidence). COST: escalations pay the teacher's latency (Bench 082 posture figure).
+escalate = { think_file = "mammoth_esc_adapter_v1", think_digest = "blake3:627f1fc03779b21ac08bd18997e3f7c486f9d3632dca873886d4bf2ce69d37b5", margin = 0.05, min_rate = 0.15, max_rate = 0.60 }
+pin_keys = []
+budget  = { load = "eager", max_payload_mb = 16 }
+
+[[vessel]]
+suite   = "hellaswag_jdi"
+class   = "hosted_only"
+posture = { arm = "A0" }                                          # the artifact-less cheap leg (the emotion_syn row's shape; the fit's capture-cheap read 0.2565)
+# Issue 059's T3 arm (the Bench 092 pre-registered seat, 2026-11-08 — the same GO family + licence settlement): ESC composed 0.3995 vs cheap 0.2565 (Δ +0.1430, paired LB95 +0.1277 > 0) at rate 19.8% in-window (cal 12.0%, shift +7.8pp — inside the 10% guard, the biggest of the three) — all three arm gates pass; gate rho 0.10 (ESC_GATE_RHOS), thresholds score 0.000 / dist 0.306 (re-fit live at boot). The ρ 0.60 row read composed 0.8610 but its rate 82.0% is OUTSIDE the window — the rate gate refused it, by design (the 087 precedent's shape). Think leg = the SAME remote mammoth-1 adapter + weights digest (4-option arity re-verified at the join). BENCHMARK-conditioned arm (the 059 rows' law): the contamination shadow read is REQUIRED before any real-traffic claim (public HELLASWAG mammoth-training unverified); the composed cal→test shift NOT measured — the +7.8pp rate transfer is the only evidence, and the Bench 077 prior says treat out-of-family shifts seriously.
+escalate = { think_file = "mammoth_esc_adapter_v1", think_digest = "blake3:627f1fc03779b21ac08bd18997e3f7c486f9d3632dca873886d4bf2ce69d37b5", margin = 0.05, min_rate = 0.15, max_rate = 0.60 }
+pin_keys = []
+budget  = { load = "eager", max_payload_mb = 16 }
+
+[[vessel]]
 suite   = "prompt_injections"
 digest  = "blake3:ee0b4eb4336299b21347a2816ed93fb50ee6b6642d2c86bb05915caf037cddd3"   # the Issue 578 T2 artifact (Bench 611's mint digest, winner name per Plan 003 T4)
 class   = "hosted_only"
@@ -387,8 +405,18 @@ fn arsenal_manifest_bytes_are_pinned_byte_for_byte() {
 /// weights digest — the digest attests the build, not the suite; the
 /// licence SETTLED MIT per Research 019 finding 1 + the owner ruling;
 /// the two verdict conditions ride in the rows' comments).
+/// RE-PINNED 2026-11-08 WITH DATA (Issue 059's T3): the winogrande_jdi +
+/// hellaswag_jdi rows gain their escalate tables (rethink Benches 091/092:
+/// wino composed 0.7269 vs A0-cheap 0.4830, LB95 +0.2191, rate 51.1%, ρ 0.45;
+/// hswag composed 0.3995 vs 0.2565, LB95 +0.1277, rate 19.8%, ρ 0.10; the
+/// artifact-less A0 cheap rows — no winner artifact exists for an unserved
+/// panel suite — over the SAME remote mammoth think leg + weights digest;
+/// BENCHMARK-conditioned arms: the contamination shadow read rides per row).
+/// The GOAT IS the fits' frozen reads (the pre-registered arm gates passed on
+/// them); the lockstep rethink-side pins (esc_gates 22/22 + ESC_POSTURES +
+/// ESC_GATE_RHOS) landed in the same family.
 const PINNED_PRODUCTION_MANIFEST_DIGEST: &str =
-    "blake3:b66c99aa5e49b8b8fbe4372d948c468594c829d23495b8642805938e163cb2a3";
+    "blake3:4fdd953b3eff5a36ee0672f9bf1ec69387ccb7daeeeccbe5175ea8fa29354996";
 
 #[test]
 fn production_manifest_bytes_are_pinned_byte_for_byte() {
@@ -433,7 +461,7 @@ fn manifest_posture_rows_are_the_serving_law_verdict() {
     // (qid, option) tables via reflex's `oc()`) — and vs H1 (+1.4 pt,
     // LB95 +0.0034); G1 PASS (platt 0.0095 vs floor 0.1701) — its seat
     // corpus ships from the full-pool datasets dir (deploy.yaml).
-    let expected: [(&str, Arm, &str); 5] = [
+    let expected: [(&str, Arm, &str); 7] = [
         (
             "massive_intent_en",
             Arm::H2 {
@@ -474,12 +502,20 @@ fn manifest_posture_rows_are_the_serving_law_verdict() {
         // cheap leg + the first escalate row since 023 (the re-source
         // law satisfied — first-party synthetic, its own GOAT).
         ("emotion_syn", Arm::A0, "A0"),
+        // winogrande_jdi + hellaswag_jdi joined 2026-11-08 (rethink
+        // Issue 059's T3 — Benches 091/092's pre-registered seats): the
+        // JDI panel's artifact-less A0 cheap arms + their escalate
+        // tables (BENCHMARK-conditioned arms — the contamination shadow
+        // read rides per row).
+        ("winogrande_jdi", Arm::A0, "A0"),
+        ("hellaswag_jdi", Arm::A0, "A0"),
     ];
     assert_eq!(
         m.rows().len(),
-        5,
-        "the manifest carries exactly the five rows (the four permissive \
-         sellable + the emotion_syn ESC re-arm; the licence-barred four, \
+        7,
+        "the manifest carries exactly the seven rows (the four permissive \
+         sellable + the emotion_syn ESC re-arm + the two Issue-059 JDI \
+         panel arms; the licence-barred four, \
          the six artifact-less A0 families, and the retired code_fixtures \
          row left with their retirements)"
     );
@@ -1228,7 +1264,15 @@ fn escalate_manifest_text(posture: &str, escalate: &str) -> String {
 /// Bench 087's pre-registered seat: composed 0.8960 vs cheap 0.8540,
 /// Δ +0.0420, LB95 +0.0137, rate 52.8% in-window, ρ 0.45; the SAME
 /// remote leg + weights digest — the digest attests the build, not the
-/// suite; the same two conditions ride). Before those, the ZERO state held since the licence
+/// suite; the same two conditions ride) and winogrande_jdi + hellaswag_jdi
+/// (rethink Issue 059's T3, 2026-11-08 — Benches 091/092's pre-registered
+/// seats: wino composed 0.7269 vs A0-cheap 0.4830, Δ +0.2439, LB95 +0.2191,
+/// rate 51.1% in-window, ρ 0.45; hswag composed 0.3995 vs 0.2565, Δ +0.1430,
+/// LB95 +0.1277, rate 19.8% in-window, ρ 0.10; the ARTIFACT-LESS A0 cheap
+/// rows — no winner artifact exists for an unserved panel suite, the
+/// emotion_syn row's shape — over the SAME remote leg + weights digest; the
+/// JDI-panel arms are BENCHMARK-conditioned: the contamination shadow read
+/// rides per row, never a real-traffic claim). Before those, the ZERO state held since the licence
 /// demotions (issue 023 T2/T3 removed xnli_en's and ag_news's with their
 /// rows) — the parser + validator rules stay exercised by the mutation
 /// fixtures below, and the Bench-0057 posture records + the G5 research
@@ -1241,10 +1285,10 @@ fn escalate_grammar_pins_the_armed_production_state() {
     let armed: Vec<_> = m.rows().iter().filter(|r| r.escalate.is_some()).collect();
     assert_eq!(
         armed.len(),
-        3,
-        "the production manifest arms exactly three escalate rows (massive_intent_en + \
-         banking77 + emotion_syn) — a new armed row is its own re-source + GOAT, \
-         never a silent re-flag"
+        5,
+        "the production manifest arms exactly five escalate rows (massive_intent_en + \
+         banking77 + winogrande_jdi + hellaswag_jdi + emotion_syn) — a new armed row \
+         is its own re-source + GOAT, never a silent re-flag"
     );
     assert_eq!(
         armed[0].suite, "massive_intent_en",
@@ -1291,11 +1335,56 @@ fn escalate_grammar_pins_the_armed_production_state() {
         );
     }
     assert_eq!(
-        armed[2].suite, "emotion_syn",
+        armed[2].suite, "winogrande_jdi",
+        "row order pins the armed set (the Issue-059 rows sit between banking77 and \
+         emotion_syn — manifest order)"
+    );
+    {
+        let esc = armed[2].escalate.as_ref().expect("winogrande armed above");
+        assert_eq!(esc.margin, 0.05, "the armed margin is the pinned record");
+        assert_eq!(
+            esc.lcb_floor, None,
+            "lcb_floor none is EXPLICIT (the LCB leg is UNMEASURED — no cal mammoth coverage)"
+        );
+        assert_eq!(
+            (esc.min_rate, esc.max_rate),
+            (0.15, 0.60),
+            "the rate window is the GOAT's"
+        );
+        assert_eq!(
+            esc.think_digest,
+            "blake3:627f1fc03779b21ac08bd18997e3f7c486f9d3632dca873886d4bf2ce69d37b5",
+            "the SAME staged mammoth-1 build — the digest attests the build, not the suite"
+        );
+    }
+    assert_eq!(
+        armed[3].suite, "hellaswag_jdi",
         "row order pins the armed set"
     );
     {
-        let esc = armed[2].escalate.as_ref().expect("emotion_syn armed above");
+        let esc = armed[3].escalate.as_ref().expect("hellaswag armed above");
+        assert_eq!(esc.margin, 0.05, "the armed margin is the pinned record");
+        assert_eq!(
+            esc.lcb_floor, None,
+            "lcb_floor none is EXPLICIT (the LCB leg is UNMEASURED — no cal mammoth coverage)"
+        );
+        assert_eq!(
+            (esc.min_rate, esc.max_rate),
+            (0.15, 0.60),
+            "the rate window is the GOAT's"
+        );
+        assert_eq!(
+            esc.think_digest,
+            "blake3:627f1fc03779b21ac08bd18997e3f7c486f9d3632dca873886d4bf2ce69d37b5",
+            "the SAME staged mammoth-1 build — the digest attests the build, not the suite"
+        );
+    }
+    assert_eq!(
+        armed[4].suite, "emotion_syn",
+        "row order pins the armed set"
+    );
+    {
+        let esc = armed[4].escalate.as_ref().expect("emotion_syn armed above");
         assert_eq!(esc.margin, 0.05, "the armed margin is the pinned record");
         assert_eq!(
             esc.lcb_floor, None,
