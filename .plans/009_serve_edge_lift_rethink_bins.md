@@ -9,7 +9,7 @@ half) was separate — it LANDED 2026-10-03 (see Plan 008's B4 row).
 
 ## Why this plan exists
 
-The public flip landed (gist-rs/riir-instinct, `382b6bd`, CI green both
+The public flip landed (riir-ai/riir-instinct, `382b6bd`, CI green both
 jobs). Rethink's bins cannot consume the HTTP edge today because the
 edge lives IN the open bin: `src/bin/serve.rs` is 1,523 lines with
 env/arg parsing + lane boot + the entire HTTP loop in `main()` —
@@ -23,7 +23,7 @@ crate FIRST, then Rethink consumes it. Forking the bin is refused
 > The owner retired the two-repo arrangement hours after Phase C ("git
 > history leak is fine… i dont want 2 confusing repo i want single source
 > of truth"). The full history now lives ON the public repo
-> (gist-rs/riir-instinct; `develop` is the working branch, `main` the same
+> (riir-ai/riir-instinct; `develop` is the working branch, `main` the same
 > tip for the landing page) and this checkout's origin points there.
 > **Open-crate src changes land ONCE** — commit on `develop`, push; no
 > replay step, no second repo. The fence `--post-split` still asserts the
@@ -32,8 +32,8 @@ crate FIRST, then Rethink consumes it. Forking the bin is refused
 > Phase-C posture, kept as the record of what it was.
 
 Any open-crate src change now lands TWICE, one family: the private
-whole-history tree (develop, gist-rs/riir-instinct-internal) AND the
-public export repo (main, gist-rs/riir-instinct). Mechanics: land +
+whole-history tree (develop, riir-ai/riir-instinct-internal) AND the
+public export repo (main, riir-ai/riir-instinct). Mechanics: land +
 gate on develop, then replay the same tree delta as a fresh commit on
 the public repo (the public repo accepts new commits; it is a fresh
 root that grows), re-run the fence both arms + the public CI. The

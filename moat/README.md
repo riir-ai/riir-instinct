@@ -1,7 +1,7 @@
 # moat/ — BORN as `../riir-rethink` (a pointer, not a seed any more)
 
 The Rethink seed's job is done: the private product repo **`riir-rethink`**
-(gist-rs/riir-rethink, birth commit `e263686`) was born 2026-10-03 from
+(riir-ai/riir-rethink, birth commit `e263686`) was born 2026-10-03 from
 THIS directory's tracked contents, verbatim (riir-instinct Plan 008 B3 +
 the owner's birth directive: "move any code to riir-rethink before
 public; history is fine").

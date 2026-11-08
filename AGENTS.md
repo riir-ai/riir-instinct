@@ -5,8 +5,8 @@ The global `~/.agents/` rules apply; this file documents repo-local context.
 ## ⚠ THE SPLIT (riir-ai Proposal 052, 2026-10-03) — read before anything else
 
 **Instinct OPENS** as the public teaching lane, SINGLE-SOURCE-OF-TRUTH: the
-full git history lives on the public repo (`gist-rs/riir-instinct-internal`
-is deleted; the 4090 remote must point at `gist-rs/riir-instinct.git`). Moat
+full git history lives on the public repo (`riir-ai/riir-instinct-internal`
+is deleted; the 4090 remote must point at `riir-ai/riir-instinct.git`). Moat
 content in git HISTORY is owner-sanctioned; the moat law still binds the
 working TREE and the fence (`scripts/fence_gate.sh --post-split`) stays.
 **Rethink is the PRIVATE moat**: `../riir-rethink` (seeded from `moat/`;

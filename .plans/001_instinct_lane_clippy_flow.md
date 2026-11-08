@@ -45,8 +45,8 @@ weights are bytes; mining → settle → corpus → retrain).
 
 ## Phases
 
-- [x] **P1 — birth.** Private `gist-rs/riir-instinct` (now
-      gist-rs/riir-instinct-internal after the 2026-10-03 Phase-C rename),
+- [x] **P1 — birth.** Private `riir-ai/riir-instinct` (now
+      riir-ai/riir-instinct-internal after the 2026-10-03 Phase-C rename),
       `develop`, contract
       docs (BOUNDARY `Visibility: private`), numbered dirs; registered as a
       contract repo in katgpt-rs (`repo_set.txt` + AGENTS count + the pin

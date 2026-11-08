@@ -1,6 +1,6 @@
 # riir-instinct — boundary contract
 
-Visibility: public (GitHub `gist-rs/riir-instinct` measures PUBLIC — the
+Visibility: public (GitHub `riir-ai/riir-instinct` measures PUBLIC — the
 Proposal-052 Phase-C flip landed 2026-10-03, owner-confirmed 2026-11-07
 "we open for public good"; fence GREEN: `scripts/fence_gate.sh
 --post-split`). Deliberately NOT the bare C3b leaf form — the bare
