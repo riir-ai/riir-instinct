@@ -93,7 +93,13 @@ hard-coded posture tables or filename conventions behind it.
   swaps monotonic (both loopback-only); the LRU policy releases the
   least-recently-used Ready lazy lane at a lazy trigger when residency
   is at/over capacity (best-effort, eager rows exempt — the same release
-  machinery, the tag kept, the reload `Idempotent`). Kill-switch
+  machinery, the tag kept, the reload `Idempotent`). The pick_latch
+  eviction seat (issue 032, opt-in feature + promote-only
+  `INSTINCT_LRU_LATCH`) is LANDED-NEGATIVE: a structural no-op on an
+  evict-on-consult policy (the hold always names the just-evicted lane,
+  absent from the next consult's candidates) — kept byte-identical-off
+  for a future sweeper-shaped policy; do not re-tune it (issue 032's
+  record). Kill-switch
   `RIIR_INSTINCT_HOARD_GATE=0` (the exact literal) disarms the hoarding
   gate.
 - **A8** no runtime minting (riir-train mints); **A9** same-engine-class

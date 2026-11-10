@@ -57,13 +57,15 @@ use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 
+#[cfg(feature = "pick_latch")]
+use katgpt_core::pick_latch::PickLatch;
 use katgpt_core::set_admission::SetAdmissionConfig;
 use riir_reflex::harness::suites::QKind;
 
 use crate::arsenal::ArsenalManifest;
 use crate::arsenal_ops::{
-    check_epoch_tag, hoard_check, hoard_gate_armed, EpochApply, EpochTag, LaneSlot, LaneState,
-    SwapRefusal,
+    EpochApply, EpochTag, LaneSlot, LaneState, SwapRefusal, check_epoch_tag, hoard_check,
+    hoard_gate_armed,
 };
 use crate::receipt::{decision_blake3, fingerprint, input_blake3};
 use crate::server::AnySuiteServer;
@@ -428,7 +430,17 @@ pub fn run(cfg: ServeConfig) -> Result<(), String> {
         };
         slots.push(Arc::new(LaneSlot::new(s, st)));
     }
-    let state = Arc::new(SrvState { slots, ctx });
+    let state = Arc::new(SrvState {
+        slots,
+        ctx,
+        #[cfg(feature = "pick_latch")]
+        lru_latch: std::sync::Mutex::new({
+            let (temperature, threshold) = lru_latch_calibration();
+            LruLatchState {
+                latch: PickLatch::with_gate(temperature, threshold),
+            }
+        }),
+    });
     let lazy_n = state.slots.len() - eager.len();
     eprintln!(
         "[riir-instinct] arsenal: {} eager lane(s) loading at boot, {lazy_n} lazy (first decision loads)",
@@ -526,6 +538,22 @@ pub type LaneLoader = fn(&LoadCtx<'_>, &'static str, Option<&str>) -> Result<Loa
 struct SrvState {
     slots: Vec<Arc<LaneSlot<AnySuiteServer>>>,
     ctx: Arc<BootCtx>,
+    /// Issue 032 — the eviction seat's hysteresis latch: boot-time
+    /// calibration `(temperature_ms, threshold)` + the held victim
+    /// across triggers. `decline` (keep the held victim) is the default
+    /// answer; only a margin-clearing colder challenger moves it.
+    #[cfg(feature = "pick_latch")]
+    lru_latch: std::sync::Mutex<LruLatchState>,
+}
+
+/// Issue 032 — the eviction latch's persisted state: the producer latch
+/// constructed with the boot-time calibration (its gate tuple lives
+/// INSIDE the `PickLatch`; its held slot index survives triggers — a
+/// re-construct would clear it, so calibration is boot-time by
+/// construction).
+#[cfg(feature = "pick_latch")]
+struct LruLatchState {
+    latch: PickLatch,
 }
 
 /// Bounded single-read (the vessel reader's discipline, mirrored): a
@@ -791,7 +819,7 @@ fn lru_victim(
     min_idle_ms: u64,
     now_ms: u64,
 ) -> Option<usize> {
-    let floor_active = min_idle_ms > 0 && candidates.len() < capacity + OVERSHOOT_CAP;
+    let floor_active = lru_floor_active(candidates.len(), capacity, min_idle_ms);
     if !floor_active {
         return candidates
             .iter()
@@ -802,9 +830,127 @@ fn lru_victim(
     candidates
         .iter()
         .copied()
-        .filter(|(t, _)| stamp_idle_ms(*t, now_ms) >= min_idle_ms)
+        .filter(|(t, _)| lru_eligible(*t, min_idle_ms, now_ms))
         .min_by_key(|(t, i)| (*t, *i))
         .map(|(_, i)| i)
+}
+
+/// The floor's activity predicate — ONE home for the issue-026 rule the
+/// victim choice and the latched seat's eligibility table must agree on
+/// (they must never disagree about WHICH lanes are eligible).
+fn lru_floor_active(candidates_len: usize, capacity: usize, min_idle_ms: u64) -> bool {
+    min_idle_ms > 0 && candidates_len < capacity + OVERSHOOT_CAP
+}
+
+/// Is this candidate eviction-eligible under the Issue-026 floor? One
+/// home for the predicate (the latched seat scores INELIGIBLE lanes at
+/// −∞ so the latch can never seat or switch to one).
+fn lru_eligible(stamp: u64, min_idle_ms: u64, now_ms: u64) -> bool {
+    min_idle_ms == 0 || stamp_idle_ms(stamp, now_ms) >= min_idle_ms
+}
+
+// Issue 032 — the A7 eviction seat's selection-hysteresis latch (the
+// consumer half of katgpt-rs Issue 987's lead; the reflex Issue-116 twin
+// wires the pick_domain seat). The latch only steadies WHICH eligible
+// lane is released — never WHETHER one is (the idle floor, the
+// OVERSHOOT_CAP waive and the capacity trigger keep their exact
+// upstream semantics). Default `decline` = keep the held victim; a
+// challenger must clear the sigmoid margin
+// (`temperature · lnit(threshold)` score units — millis of extra
+// coldness) to take the hold.
+
+/// The eviction latch's score for one candidate: its idle in SECONDS as
+/// f32 (the argmax = the coldest — the same lane the incumbent
+/// expression picks; equal idle ties break to the LOWER SLOT INDEX,
+/// exactly the incumbent `min_by_key`'s `(t, i)` tie rule). Ineligible
+/// candidates and non-candidates score −∞, so the latch can never seat
+/// or switch to a lane the pure seam would not release. SECONDS, not
+/// millis: the producer clamps its gate temperature to `[1e-3, 1e3]`,
+/// so the score scale must keep the working margins (minutes) inside
+/// that band — a 60 s margin is temperature 60.0, a millis scale would
+/// clamp 60_000 → 1000 and shrink the margin ~60× silently. f32 idle
+/// seconds quantize past ~194 days of process uptime (sub-8 ms spacing
+/// at day-scale) — deterministic per replay, and far below the
+/// minute-scale margin the gate switches on.
+#[cfg(feature = "pick_latch")]
+fn lru_latch_scores(
+    candidates: &[(u64, usize)],
+    capacity: usize,
+    min_idle_ms: u64,
+    now_ms: u64,
+    n_slots: usize,
+) -> Vec<f32> {
+    let mut scores = vec![f32::NEG_INFINITY; n_slots];
+    let floor_active = lru_floor_active(candidates.len(), capacity, min_idle_ms);
+    for (stamp, slot) in candidates {
+        if !floor_active || lru_eligible(*stamp, min_idle_ms, now_ms) {
+            scores[*slot] = stamp_idle_ms(*stamp, now_ms) as f32 / 1000.0;
+        }
+    }
+    scores
+}
+
+/// The LATCHED victim choice over the same candidate set the pure seam
+/// sees. The held victim survives a trigger unless the new coldest lane
+/// is meaningfully colder by the sigmoid margin; a held slot that has
+/// left the eligible set (used, released, or fallen inside the floor)
+/// scores −∞ and the challenger takes the hold trivially. Takes the
+/// caller's pure pick (the caller handles the `None`/skip branch — the
+/// latch never fires a trigger the pure seam skipped) and returns the
+/// picked victim. The latch carries its own boot-time calibration (the
+/// gate tuple it was constructed with — re-constructing per consult
+/// would clear the held state and kill the hysteresis).
+#[cfg(feature = "pick_latch")]
+fn lru_victim_latched(
+    candidates: &[(u64, usize)],
+    capacity: usize,
+    min_idle_ms: u64,
+    now_ms: u64,
+    n_slots: usize,
+    latch: &mut PickLatch,
+    incumbent: usize,
+) -> usize {
+    let scores = lru_latch_scores(candidates, capacity, min_idle_ms, now_ms, n_slots);
+    match latch.decide(Some(&scores)).pick() {
+        Some(picked) => picked,
+        None => incumbent,
+    }
+}
+
+/// BOOT-TIME calibration read (`INSTINCT_LRU_LATCH_TEMP_SECS` — the
+/// switch margin ≈ `temp · ln 3` of extra coldness in SECONDS, default
+/// 60 s; `INSTINCT_LRU_LATCH_THRESH` — default 0.75). Stored with the
+/// latch (constructed `with_gate` at boot): the gate cannot change per
+/// consult (a re-construct clears the held state); a deploy that wants
+/// new calibration restarts the process. Both values clamp through the
+/// producer's `with_gate` (no panic path) — the score scale is seconds
+/// so the default 60.0 sits inside the producer's `[1e-3, 1e3]`
+/// temperature band (a millis-scale temperature would clamp silently).
+#[cfg(feature = "pick_latch")]
+fn lru_latch_calibration() -> (f32, f32) {
+    let temp_secs = std::env::var("INSTINCT_LRU_LATCH_TEMP_SECS")
+        .ok()
+        .and_then(|v| v.trim().parse::<f32>().ok())
+        .unwrap_or(60.0);
+    let threshold = std::env::var("INSTINCT_LRU_LATCH_THRESH")
+        .ok()
+        .and_then(|v| v.trim().parse::<f32>().ok())
+        .unwrap_or(katgpt_core::pick_latch::DEFAULT_LATCH_THRESHOLD);
+    (temp_secs, threshold)
+}
+
+/// The runtime arming surface (`INSTINCT_LRU_LATCH`, promote-only — the
+/// env-switch law: exact `1`/`true`/`on` arms; unset or any other value
+/// = OFF, byte-identical bypass, the latch's held state preserved for
+/// the next armed trigger). Read LIVE at every trigger (the
+/// `INSTINCT_LRU_CAPACITY` posture: a deploy turns the latch on without
+/// a rebuild).
+#[cfg(feature = "pick_latch")]
+fn lru_latch_armed() -> bool {
+    matches!(
+        std::env::var("INSTINCT_LRU_LATCH").as_deref(),
+        Ok("1") | Ok("true") | Ok("on")
+    )
 }
 
 /// The R5 LRU policy, best-effort by contract: while the resident lazy
@@ -851,12 +997,8 @@ fn lru_make_room(state: &SrvState, incoming: &str, capacity: usize) -> usize {
         if candidates.len() < capacity {
             return evicted;
         }
-        let Some(victim_idx) = lru_victim(
-            &candidates,
-            capacity,
-            min_idle_ms,
-            crate::arsenal_ops::process_epoch_ms(),
-        ) else {
+        let now = crate::arsenal_ops::process_epoch_ms();
+        let Some(incumbent) = lru_victim(&candidates, capacity, min_idle_ms, now) else {
             // Issue 026 — every resident is inside the idle floor (and
             // below the ceiling): skip this trigger LOUD, never silent
             // (the load proceeds over budget — best-effort stays
@@ -870,6 +1012,37 @@ fn lru_make_room(state: &SrvState, incoming: &str, capacity: usize) -> usize {
             );
             return evicted;
         };
+        // Issue 032 — the latched seat: armed, the held victim survives
+        // unless the fresh coldest clears the sigmoid margin (the thrash
+        // guard). The latch only steadies WHICH eligible lane is released
+        // — never WHETHER one is (the pure seam's pick already fired
+        // above; the held victim is always a floor-eligible candidate —
+        // an ineligible held scores −∞ and the challenger takes the hold
+        // trivially).
+        #[cfg(feature = "pick_latch")]
+        let victim_idx = if lru_latch_armed() {
+            let mut st = state.lru_latch.lock().expect("lru latch lock");
+            let picked = lru_victim_latched(
+                &candidates,
+                capacity,
+                min_idle_ms,
+                now,
+                state.slots.len(),
+                &mut st.latch,
+                incumbent,
+            );
+            if picked != incumbent {
+                eprintln!(
+                    "[riir-instinct] arsenal: LRU latch held slot {picked} over the fresh \
+                     coldest slot {incumbent} (margin not cleared — the thrash guard)",
+                );
+            }
+            picked
+        } else {
+            incumbent
+        };
+        #[cfg(not(feature = "pick_latch"))]
+        let victim_idx = incumbent;
         let victim = &state.slots[victim_idx];
         match victim.release() {
             Ok(crate::arsenal_ops::ReleaseOutcome::Released) => {
@@ -2491,5 +2664,239 @@ mod lru_hysteresis_tests {
         // A fully-fresh set: no eligible lane → None (the skip path).
         let fresh = vec![(now, 0), (now, 1)];
         assert_eq!(lru_victim(&fresh, 2, 60_000, now), None);
+    }
+}
+
+#[cfg(all(test, feature = "pick_latch"))]
+mod lru_latch_tests {
+    //! Issue 032 — the A7 eviction seat's hysteresis latch fixtures,
+    //! HERMETIC (the Issue-026 fixture shape): the seat is
+    //! [`lru_victim_latched`] over the same plain-Vec drive model, the
+    //! producer arithmetic is the katgpt-core `PickLatch` gate replayed
+    //! directly as the G1 oracle. Runs at `--features pick_latch` (the
+    //! module is feature-gated — a default-posture run compiles it to
+    //! nothing; the invocation is documented in AGENTS.md build
+    //! commands).
+
+    use super::*;
+
+    /// G1 (purity) — the seat's score table IS the incumbent LRU order:
+    /// the argmax over the built table must equal the pure seam's pick
+    /// for every candidate set (the cold latch seats exactly what the
+    /// bare expression picks — the reflex twin's G1 pin, on the eviction
+    /// seat).
+    #[test]
+    fn score_table_argmax_equals_the_pure_pick() {
+        type Case = (Vec<(u64, usize)>, usize, u64, u64);
+        let cases: Vec<Case> = vec![
+            (vec![(1_000, 0), (500, 1), (2_000, 2)], 2, 0, 10_000),
+            (vec![(9_000, 3), (9_500, 7), (1_000, 11)], 2, 0, 10_000),
+            // Floor active: the ineligible lane must score −∞ so it can
+            // never win the argmax.
+            (vec![(9_990, 0), (1_000, 1)], 2, 6_000, 10_000),
+            // Equal idles → the lower slot index (the (t, i) tie rule).
+            (vec![(5_000, 4), (5_000, 2)], 2, 0, 10_000),
+        ];
+        for (candidates, capacity, min_idle, now) in cases {
+            let scores = lru_latch_scores(&candidates, capacity, min_idle, now, 16);
+            let mut latch = PickLatch::new();
+            let seated = latch
+                .decide(Some(&scores))
+                .pick()
+                .expect("non-empty table seats");
+            let pure =
+                lru_victim(&candidates, capacity, min_idle, now).expect("fixture has a pick");
+            assert_eq!(
+                seated, pure,
+                "argmax(seats) != pure pick for {candidates:?}"
+            );
+        }
+    }
+
+    /// G1b (ineligibility) — a floor-ineligible lane can never be seated
+    /// or held: its −∞ score loses the argmax to any eligible lane, and
+    /// a held slot that falls inside the floor releases the hold
+    /// trivially (the challenger's margin vs −∞ is +∞).
+    #[test]
+    fn ineligible_lanes_are_never_seated_or_held() {
+        let now = 100_000u64;
+        // Slot 0: stamp 1_001 → idle 98_999 (eligible at the 60 s
+        // floor). Slot 1: stamp 99_001 → idle 999 — just used →
+        // ineligible → −∞.
+        let candidates = vec![(1_001, 0usize), (99_001, 1usize)];
+        let scores = lru_latch_scores(&candidates, 2, 60_000, now, 8);
+        assert_eq!(scores[0], 99.0);
+        assert_eq!(scores[1], f32::NEG_INFINITY);
+        let pure = lru_victim(&candidates, 2, 60_000, now);
+        assert_eq!(pure, Some(0));
+        let mut latch = PickLatch::with_gate(60.0, 0.75);
+        let picked = lru_victim_latched(
+            &candidates,
+            2,
+            60_000,
+            now,
+            8,
+            &mut latch,
+            pure.expect("one eligible lane"),
+        );
+        assert_eq!(
+            picked, 0,
+            "cold start seats the only eligible lane — never the ineligible one"
+        );
+        // The hold releases trivially when the held lane falls inside
+        // the floor: slot 0 gets used (idle 0 → −∞), slot 1 ages past
+        // the floor (idle 69_999). The challenger's margin vs the −∞
+        // held score is +∞ → the hold moves to the eligible lane.
+        let used = vec![(now, 0usize), (30_001, 1usize)];
+        let scores_b = lru_latch_scores(&used, 2, 60_000, now, 8);
+        assert_eq!(scores_b[0], f32::NEG_INFINITY);
+        assert_eq!(scores_b[1], 70.0);
+        let pure_b = lru_victim(&used, 2, 60_000, now);
+        assert_eq!(pure_b, Some(1));
+        let picked = lru_victim_latched(
+            &used,
+            2,
+            60_000,
+            now,
+            8,
+            &mut latch,
+            pure_b.expect("one eligible lane"),
+        );
+        assert_eq!(
+            picked, 1,
+            "the warmed held lane scores −∞; the eligible lane takes the hold"
+        );
+    }
+
+    /// G2 (no regression) — the gate-off bypass is the pure pick
+    /// exactly (the byte-identity bar, seat-level): every trigger
+    /// returns the incumbent and the latch is never consulted.
+    #[test]
+    fn armed_off_is_the_pure_pick_on_a_seeded_stream() {
+        // A seeded oscillation stream: 4 suites round-robin at capacity
+        // 2, floor off. The latched seat with a CLEAR latch each trigger
+        // (the bypass shape: a fresh latch cold-seats the argmax = the
+        // pure pick) must reproduce the pure sequence exactly.
+        let mut residents: Vec<(u64, usize)> = Vec::new();
+        let mut stamps = [0u64; 4];
+        let mut pure_seq = Vec::new();
+        let mut latch_seq = Vec::new();
+        let mut now = 0u64;
+        for _r in 0..12 {
+            for s in 0..4 {
+                now += 1_000;
+                if stamps[s] > 0 {
+                    stamps[s] = now + 1;
+                    if let Some(row) = residents.iter_mut().find(|(_, i)| *i == s) {
+                        row.0 = now + 1;
+                    }
+                    continue;
+                }
+                loop {
+                    let candidates: Vec<(u64, usize)> =
+                        residents.iter().copied().filter(|(_, i)| *i != s).collect();
+                    if candidates.len() < 2 {
+                        break;
+                    }
+                    let Some(incumbent) = lru_victim(&candidates, 2, 0, now) else {
+                        break;
+                    };
+                    // The bypass shape: gate-off runs the pure pick —
+                    // assert equality, then apply the eviction.
+                    let mut fresh = PickLatch::with_gate(60.0, 0.75);
+                    let picked =
+                        lru_victim_latched(&candidates, 2, 0, now, 4, &mut fresh, incumbent);
+                    assert_eq!(picked, incumbent, "a fresh latch seats the pure pick");
+                    residents.retain(|&(_, i)| i != incumbent);
+                    stamps[incumbent] = 0;
+                    pure_seq.push(incumbent);
+                    latch_seq.push(picked);
+                }
+                stamps[s] = now + 1;
+                residents.push((now + 1, s));
+            }
+        }
+        assert_eq!(pure_seq, latch_seq);
+        assert!(!pure_seq.is_empty(), "the stream must actually evict");
+    }
+
+    /// The hysteresis mechanic — the thrash guard on a two-lane noise
+    /// band: two lanes with near-identical idles flip the pure pick
+    /// every trigger; the latched seat keeps the held victim unless the
+    /// challenger clears `temperature·ln 3` of extra coldness. With the
+    /// 60 s default margin, a 1 s-class jitter NEVER switches.
+    #[test]
+    fn noise_band_never_flips_the_held_victim() {
+        let mut latch = PickLatch::with_gate(60.0, 0.75);
+        let now = 1_000_000u64;
+        // Trigger 1: slot 3 coldest by 1 s → seats it.
+        let t1 = vec![(400_000u64, 3usize), (401_000, 5)];
+        assert_eq!(lru_victim_latched(&t1, 2, 0, now, 8, &mut latch, 3), 3);
+        // Trigger 2: the jitter — slot 5 now coldest by 1 s. The pure
+        // pick would flip; the margin (ln 3 × 60 s ≈ 66 s) is not met.
+        let t2 = vec![(400_000u64, 5usize), (401_000, 3)];
+        assert_eq!(
+            lru_victim_latched(&t2, 2, 0, now, 8, &mut latch, 5),
+            3,
+            "the held victim survives the 1 s jitter"
+        );
+        // Trigger 3: a 60 s advantage (gate = σ(1.0) ≈ 0.731 < 0.75)
+        // does NOT move the hold — the margin is the ln-3 band, not any
+        // positive advantage.
+        let t3b = vec![(340_000u64, 5usize), (400_000, 3)];
+        assert_eq!(
+            lru_victim_latched(&t3b, 2, 0, now, 8, &mut latch, 5),
+            3,
+            "a sub-margin challenger declines"
+        );
+        // Trigger 4: slot 5 goes decisively colder — the advantage must
+        // clear `temperature·ln 3` = 60_000 × 1.0986 ≈ 65_917 ms, so a
+        // 120 s advantage (gate = σ(2.0) ≈ 0.881 ≥ 0.75) switches.
+        let t3 = vec![(280_000u64, 5usize), (400_000, 3)];
+        assert_eq!(
+            lru_victim_latched(&t3, 2, 0, now, 8, &mut latch, 5),
+            5,
+            "a margin-clearing challenger takes the hold"
+        );
+        // The pure expression, for contrast: flips on every trigger.
+        assert_eq!(lru_victim(&t2, 2, 0, now), Some(5));
+    }
+
+    /// Determinism — the same trigger stream twice produces the same
+    /// victim sequence (the replay pin; the latch is the only state and
+    /// it is driven identically).
+    #[test]
+    fn replay_is_byte_identical() {
+        let run = || {
+            let mut latch = PickLatch::with_gate(60.0, 0.75);
+            let mut seq = Vec::new();
+            let mut residents: Vec<(u64, usize)> = (0..6usize)
+                .map(|i| (1_000_000u64 - (i as u64) * 7_000, i))
+                .collect();
+            let mut now = 1_000_000u64;
+            for trigger in 0..30 {
+                now += 3_000;
+                // Rotate a touch across residents (slot trigger % 6).
+                let touched = trigger % 6;
+                if let Some(row) = residents.iter_mut().find(|(_, i)| *i == touched) {
+                    row.0 = now;
+                }
+                let candidates: Vec<(u64, usize)> =
+                    residents.iter().copied().filter(|(_, i)| *i != 6).collect();
+                if candidates.len() < 3 {
+                    break;
+                }
+                let incumbent = lru_victim(&candidates, 3, 0, now).expect("pick");
+                let picked = lru_victim_latched(&candidates, 3, 0, now, 7, &mut latch, incumbent);
+                seq.push(picked);
+                // Model the eviction: the picked lane's stamp resets to
+                // fresh (it reloads).
+                if let Some(row) = residents.iter_mut().find(|(_, i)| *i == picked) {
+                    row.0 = now;
+                }
+            }
+            seq
+        };
+        assert_eq!(run(), run(), "the seeded replay is deterministic");
     }
 }
