@@ -366,6 +366,7 @@ pub fn decision_groups(samples: &[Sample]) -> Vec<(usize, usize)> {
         groups.push((i, j));
         i = j;
     }
+    groups.shrink_to_fit();
     groups
 }
 

@@ -129,6 +129,7 @@ pub fn pareto_rank0(arms: &[ArmStat]) -> Vec<usize> {
             keep.push(i);
         }
     }
+    keep.shrink_to_fit();
     keep
 }
 

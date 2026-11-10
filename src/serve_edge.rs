@@ -911,10 +911,7 @@ fn lru_victim_latched(
     incumbent: usize,
 ) -> usize {
     let scores = lru_latch_scores(candidates, capacity, min_idle_ms, now_ms, n_slots);
-    match latch.decide(Some(&scores)).pick() {
-        Some(picked) => picked,
-        None => incumbent,
-    }
+    latch.decide(Some(&scores)).pick().unwrap_or(incumbent)
 }
 
 /// BOOT-TIME calibration read (`INSTINCT_LRU_LATCH_TEMP_SECS` — the
@@ -2573,7 +2570,7 @@ mod lru_hysteresis_tests {
         assert!(peak <= 2, "floor-off residency stays at capacity: {peak}");
         let mut residents: Vec<(u64, usize)> = Vec::new();
         let mut stamps = [0u64; 3];
-        let mut legacy_drive_evictions = Vec::new();
+        let mut legacy_drive_evictions = Vec::with_capacity(20);
         let mut now = 0u64;
         for _ in 0..20 {
             for s in 0..3 {
@@ -2779,8 +2776,8 @@ mod lru_latch_tests {
         // pure pick) must reproduce the pure sequence exactly.
         let mut residents: Vec<(u64, usize)> = Vec::new();
         let mut stamps = [0u64; 4];
-        let mut pure_seq = Vec::new();
-        let mut latch_seq = Vec::new();
+        let mut pure_seq = Vec::with_capacity(12);
+        let mut latch_seq = Vec::with_capacity(12);
         let mut now = 0u64;
         for _r in 0..12 {
             for s in 0..4 {

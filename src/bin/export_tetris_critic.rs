@@ -199,7 +199,7 @@ fn main() {
     );
     std::fs::create_dir_all(&out).expect("create out dir");
 
-    let mut files = Vec::<Value>::new();
+    let mut files = Vec::with_capacity(regimes.len());
     for &regime in &regimes {
         let tag = if regime.rows == 0 {
             "empty".to_string()

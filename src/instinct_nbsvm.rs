@@ -704,7 +704,7 @@ pub fn probe_front_split(
 /// train side.
 pub fn load_suite_split(dir: &Path, suite: &str, split: &str) -> Result<Vec<SuiteRow>, String> {
     let raw = read_split_envelope(dir, suite, split)?;
-    let mut rows = Vec::new();
+    let mut rows = Vec::with_capacity(raw.len());
     for row in &raw {
         if let Some(sr) = suite_row(suite, row) {
             rows.push(sr);
@@ -781,7 +781,7 @@ mod tests {
     /// and the equal-df tie-break both pinned.
     #[test]
     fn feature_selection_df_desc_bucket_asc() {
-        let mut rows = Vec::new();
+        let mut rows = Vec::with_capacity(5);
         for _ in 0..5 {
             rows.push(row("a", "zulu"));
         }
@@ -809,7 +809,7 @@ mod tests {
 
     #[test]
     fn ridge_solves_a_toy_and_picks_gold() {
-        let mut rows = Vec::new();
+        let mut rows = Vec::with_capacity(8);
         for _ in 0..8 {
             rows.push(row("a", "alpha charlie"));
         }
@@ -881,7 +881,7 @@ mod tests {
 
     #[test]
     fn v2_learns_a_toy_and_beats_the_lr0_control() {
-        let mut rows = Vec::new();
+        let mut rows = Vec::with_capacity(8);
         for _ in 0..8 {
             rows.push(row("a", "alpha charlie"));
         }
@@ -913,7 +913,7 @@ mod tests {
     /// carries the learned signal.
     #[test]
     fn v2_top_k_restriction_zeroes_unselected_weights() {
-        let mut rows = Vec::new();
+        let mut rows = Vec::with_capacity(8);
         for _ in 0..8 {
             rows.push(row("a", "alpha charlie"));
         }

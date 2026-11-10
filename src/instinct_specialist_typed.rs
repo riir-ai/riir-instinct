@@ -302,7 +302,7 @@ pub fn typed_row(row: &Value) -> Option<TypedRow> {
 /// empty survivor set.
 pub fn load_typed_rows(dir: &Path) -> Result<Vec<TypedRow>, String> {
     let raw = read_train_envelope(dir, "typed_decisions")?;
-    let mut rows = Vec::new();
+    let mut rows = Vec::with_capacity(raw.len());
     for row in &raw {
         if let Some(r) = typed_row(row) {
             rows.push(r);
@@ -461,7 +461,7 @@ pub fn typed_case_majority_baseline(
                 .or_insert(0) += 1;
         }
     }
-    let mut majority: HashMap<&str, &str> = HashMap::new();
+    let mut majority: HashMap<&str, &str> = HashMap::with_capacity(tally.len());
     for ((wf, opt), n) in &tally {
         match majority.get(wf) {
             Some(cur) if tally.get(&(wf, cur)).copied().unwrap_or(0) >= *n => {}

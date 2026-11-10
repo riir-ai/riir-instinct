@@ -84,7 +84,7 @@ fn read_sealed_json(path: &Path) -> Result<(Value, String), String> {
 /// it, so the join pairs here before the skip filter can misalign a zip).
 fn load_typed_rows_with_ids(dir: &Path) -> Result<Vec<(String, TypedRow)>, String> {
     let raw = read_train_envelope(dir, "typed_decisions")?;
-    let mut rows = Vec::new();
+    let mut rows = Vec::with_capacity(raw.len());
     for row in &raw {
         let Some(id) = row.get("id").and_then(Value::as_str) else {
             continue;
@@ -802,7 +802,7 @@ pub fn paired_holdout(strata: &[String], budget: usize) -> (Vec<usize>, Vec<usiz
         }
         by_case.entry(s.as_str()).or_default().push(i);
     }
-    let mut holdout = Vec::new();
+    let mut holdout = Vec::with_capacity(order.len());
     let mut in_holdout = vec![false; strata.len()];
     for case in &order {
         if holdout.len() >= budget {

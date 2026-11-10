@@ -961,7 +961,7 @@ mod tests {
             },
         ));
         let stop = Arc::new(AtomicBool::new(false));
-        let mut readers = Vec::new();
+        let mut readers = Vec::with_capacity(4);
         for _ in 0..4 {
             let slot = Arc::clone(&slot);
             let stop = Arc::clone(&stop);

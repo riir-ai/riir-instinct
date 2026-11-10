@@ -333,7 +333,7 @@ pub fn suite_row(suite: &str, row: &serde_json::Value) -> Option<SuiteRow> {
 /// names) — part of the determinism contract.
 pub fn load_suite_rows(dir: &Path, suite: &str) -> Result<Vec<SuiteRow>, String> {
     let raw = read_train_envelope(dir, suite)?;
-    let mut rows = Vec::new();
+    let mut rows = Vec::with_capacity(raw.len());
     for row in &raw {
         if let Some(sr) = suite_row(suite, row) {
             rows.push(sr);
@@ -379,7 +379,7 @@ pub(crate) fn read_split_envelope(
     if files.is_empty() {
         return Err(format!("no {split}-*.json under {}", suite_dir.display()));
     }
-    let mut rows = Vec::new();
+    let mut rows = Vec::with_capacity(files.len());
     for f in &files {
         let text = std::fs::read_to_string(f).map_err(|e| format!("read {}: {e}", f.display()))?;
         let v: serde_json::Value =
@@ -838,10 +838,10 @@ pub(crate) enum Targets<'a> {
     },
     /// riir-train 632 T3: PER-ROW gold mix — `t = gold_mix[row]·onehot(gold)
     /// + (1−gold_mix[row])·q_row`. The dual-shuffle acceptance gate decides
-    /// the mix per row (qualified → the 7:3 teacher:gold blend, i.e.
-    /// `gold_mix = 0.3`; rejected → pure gold, `gold_mix = 1.0`, which stays
-    /// bit-identical to `Gold` for that row by the same `0.0 · finite` law).
-    /// Same row-space lookup as [`Targets::Distill`].
+    ///   the mix per row (qualified → the 7:3 teacher:gold blend, i.e.
+    ///   `gold_mix = 0.3`; rejected → pure gold, `gold_mix = 1.0`, which stays
+    ///   bit-identical to `Gold` for that row by the same `0.0 · finite` law).
+    ///   Same row-space lookup as [`Targets::Distill`].
     DistillRowMix {
         q: &'a TeacherDump,
         gold: Vec<usize>,
@@ -1174,7 +1174,7 @@ pub fn load_teacher_dump(path: &Path) -> Result<TeacherDump, String> {
     }
     let n_classes = classes.len();
     let n_rows = (bytes.len() - body_start) / (8 + 4 * n_classes);
-    if (bytes.len() - body_start) % (8 + 4 * n_classes) != 0 {
+    if !(bytes.len() - body_start).is_multiple_of(8 + 4 * n_classes) {
         return Err(err(format!(
             "body is not a whole number of {}-byte row(s) for {n_classes} class(es)",
             8 + 4 * n_classes

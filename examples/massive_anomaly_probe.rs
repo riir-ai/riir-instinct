@@ -41,7 +41,7 @@ fn load_rows(dir: &std::path::Path, prefix: &str) -> Result<Vec<Row>, String> {
         })
         .collect();
     files.sort();
-    let mut rows = Vec::new();
+    let mut rows = Vec::with_capacity(files.len());
     for f in &files {
         let text = std::fs::read_to_string(f).map_err(|e| format!("read {}: {e}", f.display()))?;
         let v: serde_json::Value =
@@ -50,10 +50,7 @@ fn load_rows(dir: &std::path::Path, prefix: &str) -> Result<Vec<Row>, String> {
             return Err(format!("{}: no rows array", f.display()));
         };
         for r in list {
-            let row = match r.get("row") {
-                Some(row) => row,
-                None => r,
-            };
+            let row = r.get("row").unwrap_or(r);
             let (Some(label), Some(text)) = (
                 row.get("label_text").and_then(|v| v.as_str()),
                 row.get("text").and_then(|v| v.as_str()),

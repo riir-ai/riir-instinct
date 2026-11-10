@@ -254,6 +254,7 @@ pub fn encode_tetcrit2(samples: &[ContSample], cfg: &ContConfig) -> Vec<u8> {
             buf.extend_from_slice(&r.lines);
         }
     }
+    buf.shrink_to_fit();
     buf
 }
 

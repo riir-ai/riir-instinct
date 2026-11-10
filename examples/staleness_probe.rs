@@ -211,13 +211,14 @@ fn presented_keys_for(suite: &str, datasets: &Path) -> Result<Vec<String>, Strin
 
 fn build_probe() -> Result<(), String> {
     let datasets = datasets_dir();
-    let mut suites = Vec::new();
+    let cap_iter = ["banking77", "massive_intent_en", "prompt_injections"];
+    let mut suites = Vec::with_capacity(cap_iter.len());
     // Issue 023 T4 (riir-rethink): the probed suites are PERMISSIVE-only —
     // ag_news (unknown licence) and emotion (research-only) left the
     // PUBLIC fixture at the 2026-10-05 rebuild; massive_intent_en
     // (Apache-2.0) and prompt_injections (Apache-2.0) took their slots.
     // banking77's slice is UNTOUCHED (the drift specimen's pins ride it).
-    for suite in ["banking77", "massive_intent_en", "prompt_injections"] {
+    for suite in cap_iter {
         let keys = presented_keys_for(suite, &datasets)?;
         let probe = build_suite_probe(&datasets, suite, &keys)?;
         println!(
@@ -323,7 +324,7 @@ fn run_report() -> Result<(), String> {
             },
         ),
     ];
-    let mut reports = Vec::new();
+    let mut reports = Vec::with_capacity(rows.len());
     for (suite, live, reference) in &rows {
         let probe = set
             .suites
