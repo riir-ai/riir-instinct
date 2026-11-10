@@ -1,6 +1,7 @@
 # Issue 031 — T2 consumer intake: adoption/retention regression gate (LaneSlot epoch swaps)
 
 **Status:** OPEN — intake issue for katgpt-rs Plan 633 T2. The gate primitive + fixture are LANDED katgpt-rs-side; this issue is the instinct consumer wiring, filed per katgpt-rs `.issues/987_cactus_neurips2026_follow_ups.md` priority-1 (AGCL form, Research 657 §A5) and katgpt-rs `.plans/633_adoption_retention_regression_gate.md`.
+**Claimed:** zed-amo-i031@amo (amo), 1794315000, expires 2026-11-12T12:00:00+00:00 — T2 consumer wiring (window capture + swap-seat verdict + manifest posture + G1/G2/G4 gates) this session; G3 (the real-window GOAT, plan 633's T3 shape) deferred to its own may-fail unit once the wiring names the serving-decision store. No collision: plan 633's live claim (zed-86011726@m3) owns the producer plan's T3 refine-store GOAT, not this consumer file.
 
 ## What exists (producer side, landed `cf65c58a7` 2026-11-08)
 
