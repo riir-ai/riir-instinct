@@ -56,6 +56,12 @@ pub mod scene_loop;
 /// counts and verifies, never refuses).
 #[cfg(feature = "points_drain")]
 pub mod points_drain;
+/// Issue 031 — the adoption/retention regression gate at the swap seat
+/// (the consumer half of katgpt-rs Plan 633 T2). Opt-in
+/// `adoption_gate`; byte-identical off (G2) — see the module doc for
+/// the laws it never touches (A2 stays load-bearing).
+#[cfg(feature = "adoption_gate")]
+pub mod swap_gate;
 /// The shared hosted-serving HTTP edge (plan 009 T1 — the serve-edge
 /// lift): the listener loop, routing, the lane registry + loading
 /// machinery and every refusal shape, parameterized by

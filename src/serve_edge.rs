@@ -64,8 +64,8 @@ use riir_reflex::harness::suites::QKind;
 
 use crate::arsenal::ArsenalManifest;
 use crate::arsenal_ops::{
-    EpochApply, EpochTag, LaneSlot, LaneState, SwapRefusal, check_epoch_tag, hoard_check,
-    hoard_gate_armed,
+    check_epoch_tag, hoard_check, hoard_gate_armed, EpochApply, EpochTag, LaneSlot, LaneState,
+    SwapRefusal,
 };
 use crate::receipt::{decision_blake3, fingerprint, input_blake3};
 use crate::server::AnySuiteServer;
@@ -440,6 +440,10 @@ pub fn run(cfg: ServeConfig) -> Result<(), String> {
                 latch: PickLatch::with_gate(temperature, threshold),
             }
         }),
+        #[cfg(feature = "adoption_gate")]
+        swap_gate: std::sync::Mutex::new(crate::swap_gate::SwapGateState::new(
+            crate::swap_gate::swap_gate_stride(),
+        )),
     });
     let lazy_n = state.slots.len() - eager.len();
     eprintln!(
@@ -544,6 +548,10 @@ struct SrvState {
     /// answer; only a margin-clearing colder challenger moves it.
     #[cfg(feature = "pick_latch")]
     lru_latch: std::sync::Mutex<LruLatchState>,
+    /// Issue 031 — the swap seat's adoption gate: the per-suite decision
+    /// windows + the producer rings the swap verdict scores against.
+    #[cfg(feature = "adoption_gate")]
+    swap_gate: std::sync::Mutex<crate::swap_gate::SwapGateState>,
 }
 
 /// Issue 032 — the eviction latch's persisted state: the producer latch
@@ -1872,6 +1880,23 @@ fn decide_edge(
     };
     match result {
         Ok(MultiDecision::One(d)) => {
+            // Issue 031 — the swap gate's window capture (single-question
+            // form; the multi form's per-question capture is a
+            // follow-up). Feature + promote-only env gated; disarmed =
+            // nothing here (the hot path is untouched — G2).
+            #[cfg(feature = "adoption_gate")]
+            if crate::swap_gate::swap_gate_armed() {
+                let dh = crate::receipt::decision_blake3(&d);
+                let entry = crate::swap_gate::WindowEntry {
+                    state: req.state.clone(),
+                    options: req.options.clone(),
+                    accepted: !d.abstained,
+                    decision: crate::swap_gate::outcome_digest(&dh),
+                };
+                let mut sg = srv.swap_gate.lock().expect("swap gate lock");
+                let stride = sg.stride;
+                sg.suite_gate(slot.suite).capture(entry, stride);
+            }
             let doc = serde_json::json!({
                 "suite": d.suite,
                 "arm": d.arm,
@@ -2242,7 +2267,8 @@ fn swap_edge(stream: &mut TcpStream, srv: &Arc<SrvState>, body: &[u8], cors: Opt
 
     // The load runs OUTSIDE the slot lock — decisions keep serving the
     // old snapshot until the atomic install.
-    let lane = match load_lane(&srv.ctx, suite, Some(&req.artifact)) {
+    #[cfg_attr(not(feature = "adoption_gate"), expect(unused_mut))]
+    let mut lane = match load_lane(&srv.ctx, suite, Some(&req.artifact)) {
         Ok(l) => l,
         Err(e) => {
             json_error(
@@ -2264,6 +2290,91 @@ fn swap_edge(stream: &mut TcpStream, srv: &Arc<SrvState>, body: &[u8], cors: Opt
         epoch: req.epoch,
         digest,
     };
+    // Issue 031 — the adoption-gate verdict (the decision axis beside
+    // the epoch check): when armed, the slot is Ready, the advisory
+    // pre-gate said Advance, and the operator is not forcing, probe the
+    // challenger over the outgoing lane's decision window and refuse a
+    // KEEP verdict with a typed 409 (A2 is untouched — `check_epoch_tag`
+    // already ran and still runs at install; this seat can only KEEP,
+    // never re-order or roll back). `force` bypasses — the operator
+    // seam, logged below.
+    #[cfg(feature = "adoption_gate")]
+    if crate::swap_gate::swap_gate_armed() && !req.force {
+        let (regret, held_lane_ready, verdict_word, detail) = {
+            let window_ready = matches!(
+                &*slot.state.lock().expect("slot lock"),
+                LaneState::Ready { .. }
+            );
+            if !window_ready {
+                (false, false, String::new(), String::new())
+            } else {
+                let mut sg = srv.swap_gate.lock().expect("swap gate lock");
+                let alpha = crate::swap_gate::swap_gate_alpha();
+                let consult = sg.suites.get_mut(slot.suite);
+                let verdict = consult.map(|suite_gate| {
+                    crate::swap_gate::verdict_for_swap(suite_gate, alpha, |entry| {
+                        let outcome = lane.server.decide(&entry.state, entry.options.as_deref());
+                        outcome.ok().map(|d| crate::swap_gate::ProbeOutcome {
+                            digest: crate::swap_gate::outcome_digest(
+                                &crate::receipt::decision_blake3(&d),
+                            ),
+                            accepted: !d.abstained,
+                        })
+                    })
+                });
+                match verdict {
+                    Some(Some(v)) if v.decision == katgpt_core::adoption_gate::AdoptionDecision::Keep => (
+                        true,
+                        true,
+                        "keep".to_string(),
+                        format!(
+                            "retained {:.3} repeated {:.3} challenger score {:.4} vs the incumbent window",
+                            v.retained, v.repeated, v.score
+                        ),
+                    ),
+                    Some(Some(v)) => (
+                        false,
+                        true,
+                        crate::swap_gate::decision_word(v.decision).to_string(),
+                        format!(
+                            "retained {:.3} repeated {:.3} score {:.4}",
+                            v.retained, v.repeated, v.score
+                        ),
+                    ),
+                    // No suite window (first traffic) OR an empty window —
+                    // both the NoEvidence shape: install normally.
+                    _ => (false, true, String::new(), String::new()),
+                }
+            }
+        };
+        if regret {
+            eprintln!(
+                "[riir-instinct] arsenal: swap REGRET for {suite} → epoch {} (blake3:{}): {} — \
+                 refusing (the adoption gate advises KEEP; force to override)",
+                req.epoch,
+                hex_digest(&digest),
+                detail,
+            );
+            json_error(
+                stream,
+                "409 Conflict",
+                "swap_regret",
+                &format!(
+                    "the adoption gate advises KEEP over the challenger ({detail}) — \\
+                     re-swap with force to override the verdict",
+                ),
+                cors,
+            );
+            return;
+        }
+        if !verdict_word.is_empty() {
+            eprintln!(
+                "[riir-instinct] arsenal: swap gate verdict {verdict_word} for {suite} → epoch {} ({detail}) — installing",
+                req.epoch,
+            );
+        }
+        let _ = held_lane_ready;
+    }
     if req.force {
         let applied = slot
             .state
@@ -2296,6 +2407,16 @@ fn swap_edge(stream: &mut TcpStream, srv: &Arc<SrvState>, body: &[u8], cors: Opt
                 InstallOutcome::Idempotent => "noop",
                 InstallOutcome::Forced => "forced",
             };
+            // Issue 031 — the post-install reset: the NEW lane's window
+            // starts fresh, so the NEXT swap scores against the lane that
+            // actually served (not the retired one).
+            #[cfg(feature = "adoption_gate")]
+            if crate::swap_gate::swap_gate_armed() {
+                srv.swap_gate
+                    .lock()
+                    .expect("swap gate lock")
+                    .reset(&req.suite);
+            }
             eprintln!(
                 "[riir-instinct] arsenal: swapped {suite} → epoch {} (blake3:{}, {status})",
                 req.epoch,

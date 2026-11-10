@@ -93,8 +93,19 @@ arsenal_goat = []
 # fork. Feature-off compiles the eviction seat to today's bare
 # `lru_victim` — byte-identical, structural (cfg'd out). The runtime
 # arming is `INSTINCT_LRU_LATCH` (promote-only, exact `1`/`true`/`on`,
-# read live per trigger like the other LRU envs).
+# read live per trigger like the other LRU envs). LANDED-NEGATIVE (G3,
+# issue 032's record): a structural no-op on an evict-on-consult policy;
+# kept byte-identical-off for a future sweeper-shaped policy.
 pick_latch = ["katgpt-core/pick_latch"]
+
+# Issue 031 — the adoption/retention regression gate at the swap seat
+# (the consumer half of katgpt-rs Plan 633 T2). Forwards the producer
+# feature — never a fork. Feature-off compiles the whole module out —
+# swap behavior byte-identical (G2, structural). Runtime arming:
+# `INSTINCT_ADOPTION_GATE` (promote-only, exact `1`/`true`/`on`, latched
+# once per process); calibration `INSTINCT_ADOPTION_GATE_ALPHA` /
+# `_STRIDE`.
+adoption_gate = ["katgpt-core/adoption_gate"]
 # The Tetris lane (Issue 009 T5/T6): the measurement harness module + the
 # chance_puct teacher. Opt-in — default builds never resolve the tetris
 # substrate, and the /decide path is byte-identical.
