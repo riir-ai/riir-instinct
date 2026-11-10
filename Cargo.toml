@@ -23,7 +23,7 @@ serde = { version = "1", features = ["derive"] }
 toml = { version = "0.8", default-features = false, features = ["parse"] }
 # `set_admission`: the Vendi certificate + colinearity anchors of the
 # arsenal hoarding gate (Proposal 001 T5) — consumed, never forked.
-katgpt-core = { path = "../katgpt-rs/crates/katgpt-core", default-features = false, features = ["best_belief", "sigmoid_calibration", "set_admission", "escalation_guard"] }
+katgpt-core = { path = "../katgpt-rs/crates/katgpt-core", default-features = false, features = ["sigmoid_calibration", "set_admission", "escalation_guard"] }
 riir-reflex = { path = "../riir-reflex", default-features = false, features = ["modelless", "nb_scope", "nb_ridge", "option_cond"] }
 # The PUBLIC-RELEASE vessel reader (the teaching posture; Proposal 052):
 # reflexer's public decode/open — the HOSTED-ONLY class refuses here
@@ -98,7 +98,7 @@ pick_latch = ["katgpt-core/pick_latch"]
 # The Tetris lane (Issue 009 T5/T6): the measurement harness module + the
 # chance_puct teacher. Opt-in — default builds never resolve the tetris
 # substrate, and the /decide path is byte-identical.
-tetris = ["dep:katgpt-tetris", "dep:fastrand", "katgpt-core/chance_puct", "katgpt-core/karc_forecaster"]
+tetris = ["dep:katgpt-tetris", "dep:fastrand", "katgpt-core/chance_puct"]
 # The hosted-seat fair-use meter (Plan 326 T8–T12 / Proposal 027):
 # report-only day counters, the per-call attestation verify, the N=128
 # replay window, the config-gated enforcement hooks and the daily
@@ -123,19 +123,13 @@ tetris_goat = ["tetris"]
 # tails (saddle_escape/state_probe/entropic_tilt) carry their own pending
 # upstream quality records — disclosed in the plan, not re-claimed here.
 runetrace_loop = [
-  "katgpt-core/runetrace",
-  "katgpt-core/decision_wire",
-  "katgpt-core/rating",
-  "katgpt-core/leo_all_goals",
-  "katgpt-core/dual_leo",
-  "katgpt-core/karc_forecaster",
-  "katgpt-core/gain_cost_halt",
-  "katgpt-core/risk_control_exit",
-  "katgpt-core/ignition_schedule",
-  "katgpt-core/saddle_escape",
-  "katgpt-core/state_probe",
-  "katgpt-core/entropic_tilt",
-  "katgpt-core/loop_guidance",
+    "katgpt-core/runetrace",
+    "katgpt-core/decision_wire",
+    "katgpt-core/gain_cost_halt",
+    "katgpt-core/risk_control_exit",
+    "katgpt-core/ignition_schedule",
+    "katgpt-core/entropic_tilt",
+    "katgpt-core/loop_guidance",
 ]
 
 [workspace]
