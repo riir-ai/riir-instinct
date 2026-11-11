@@ -96,7 +96,7 @@ arsenal_goat = []
 # read live per trigger like the other LRU envs). LANDED-NEGATIVE (G3,
 # issue 032's record): a structural no-op on an evict-on-consult policy;
 # kept byte-identical-off for a future sweeper-shaped policy.
-pick_latch = ["katgpt-core/pick_latch"]
+pick_latch = ["katgpt-core/compute_control"]
 
 # Issue 031 — the adoption/retention regression gate at the swap seat
 # (the consumer half of katgpt-rs Plan 633 T2). Forwards the producer
@@ -105,11 +105,11 @@ pick_latch = ["katgpt-core/pick_latch"]
 # `INSTINCT_ADOPTION_GATE` (promote-only, exact `1`/`true`/`on`, latched
 # once per process); calibration `INSTINCT_ADOPTION_GATE_ALPHA` /
 # `_STRIDE`.
-adoption_gate = ["katgpt-core/adoption_gate"]
+adoption_gate = ["katgpt-core/compute_control"]
 # The Tetris lane (Issue 009 T5/T6): the measurement harness module + the
 # chance_puct teacher. Opt-in — default builds never resolve the tetris
 # substrate, and the /decide path is byte-identical.
-tetris = ["dep:katgpt-tetris", "dep:fastrand", "katgpt-core/chance_puct"]
+tetris = ["dep:katgpt-tetris", "dep:fastrand", "katgpt-core/planning"]
 # The hosted-seat fair-use meter (Plan 326 T8–T12 / Proposal 027):
 # report-only day counters, the per-call attestation verify, the N=128
 # replay window, the config-gated enforcement hooks and the daily
@@ -134,13 +134,13 @@ tetris_goat = ["tetris"]
 # tails (saddle_escape/state_probe/entropic_tilt) carry their own pending
 # upstream quality records — disclosed in the plan, not re-claimed here.
 runetrace_loop = [
-    "katgpt-core/runetrace",
+    "katgpt-core/formats_weights",
     "katgpt-core/decision_wire",
     "katgpt-core/gain_cost_halt",
-    "katgpt-core/risk_control_exit",
-    "katgpt-core/ignition_schedule",
+    "katgpt-core/compute_control",
+    "katgpt-core/estimators",
     "katgpt-core/entropic_tilt",
-    "katgpt-core/loop_guidance",
+    "katgpt-core/decoding",
 ]
 
 [workspace]
