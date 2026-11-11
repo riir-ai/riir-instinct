@@ -1,5 +1,6 @@
 # Issue 030: PUBLIC repo, PRIVATE optional path dep — a fresh clone cannot run cargo
 
+**Claimed:** zed-7423d19b@amo, 1794437057, expires 2026-11-13T22:44:17+00:00 — interim posture (d) unit (delegated-verdict gated)
 **Status:** Open — found 2026-11-07 during the issue-029 visibility lane (the C10 sweep confirmed this repo is PUBLIC on GitHub). `Cargo.toml` carries `riir-ledger = { path = "../riir-ledger" }` (opt-in `points_drain` feature, Plan 326 T8), but cargo reads every path dep's manifest at workspace load — `optional = true` does not help (the riir-chain sibling-layout law, measured on every repo that documents it). A public cloner without the PRIVATE `riir-ai/riir-ledger` checkout beside the clone cannot run ANY cargo command (`cargo check`/`metadata`/`test` all fail at resolution). The public teaching arc (fetch public data → train → holdout → mint → serve, BOUNDARY.md's Owns) breaks at step zero for everyone outside the org. The other sibling deps (katgpt-rs, riir-reflex, riir-reflexer) are all PUBLIC and cloneable, so riir-ledger is the ONE edge that walls the public clone out.
 
 ## The options (owner call — none is executable from a lane)
