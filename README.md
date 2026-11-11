@@ -10,6 +10,24 @@ Status: PUBLIC — the open teaching lane (the Proposal-052 carve,
 repo (see [BOUNDARY.md](BOUNDARY.md)). The trained/adaptive product lane
 lives in the private sibling `../riir-rethink`.
 
+## Build
+
+This workspace resolves its sibling path dependencies at every `cargo`
+invocation — `optional = true` does not defer resolution. A fresh clone
+needs these repos checked out beside it:
+
+- `katgpt-rs` (public)
+- `riir-reflex` (public)
+- `riir-reflexer` (public)
+- `riir-ledger` (private) — required to resolve the workspace; used only
+  by the opt-in `points_drain` feature
+
+Until the private-sibling edge is resolved (tracked in
+[Issue 030](.issues/030_public_clone_private_optional_dep.md)), a public
+clone can be read and browsed but not built: any `cargo` command fails
+when it resolves dependencies. `scripts/check_readme_path_deps.sh`
+guards this section.
+
 ## Hosted-seat fair-use metering — what the seat records (Plan 326 T8)
 
 When this repo's `serve` binary runs with the opt-in `points_drain` feature,

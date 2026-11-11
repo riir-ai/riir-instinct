@@ -13,6 +13,13 @@ enforced by the contract script's C10 visibility-honesty row
 (riir-instinct Issue 029: this line used to read "private TODAY" while
 GitHub measured PUBLIC).
 
+The public clone is resolve-incomplete until Issue 030's posture lands:
+cargo reads every sibling path-dep manifest at workspace load
+(`optional = true` does not defer it), so a clone without the private
+sibling checked out beside it fails every `cargo` command at resolution.
+The required sibling set and their visibility are pinned in README
+§Build; `scripts/check_readme_path_deps.sh` enforces the pin.
+
 > The single source of truth for what may live in and depend on this repo.
 > Audited by the `boundary-guard` skill and
 > `../riir-ai/scripts/ci_boundary_contract.sh` (workspace dep graph +
