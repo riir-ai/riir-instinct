@@ -172,6 +172,16 @@ file .deploy/local/stage/decisions/app-bin   # → ELF 64-bit x86-64
 #   HEAL_HEAD_PATH=<out-head.bin> cargo run --release --example heal_specialist_server -- [bind=127.0.0.1:8092]
 # (τ travels in a digest-checked sidecar — the server carries no default;
 # HEAL_HEAD_PATH unset refuses loud — the trained head is load-bearing)
+
+# The adoption/retention swap gate (katgpt-rs Plan 633 T2 / issue 031, opt-in
+# `adoption_gate` — consumer intake of `katgpt_core::adoption_gate`): a LaneSlot
+# epoch swap is scored against the outgoing lane's 32-case window (retained /
+# repeated; NoEvidence declines-first) before it serves — evidence, never a
+# promotion claim. The two examples are the G3 evidence pair:
+#   cargo run --release --example adoption_swap_g3 --features adoption_gate
+#   cargo run --release --example adoption_swap_g3_arena --features adoption_gate
+# (records: the wire gate's six bars + .benchmarks/066_issue031_g3_arena_real_store_cell.md;
+# disarmed builds byte-identical)
 ```
 
 ## Branch

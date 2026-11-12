@@ -63,3 +63,24 @@ the hosted seat meters `/decide` fair use (the design contract is
 The binding privacy law for the points plane is
 `../riir-refine/.docs/01_orientation/points_privacy_id_design.md` (the T16.1
 client-UUID law); this section is the seat-side disclosure beside it.
+
+## Adoption/retention swap gate — the LaneSlot epoch-swap consult (opt-in `adoption_gate`)
+
+Consumer intake for `katgpt-core::adoption_gate` (produced in katgpt-rs,
+Plan 633 / Issue 220). While the feature is on, a `LaneSlot` epoch swap is
+scored before it serves: the challenger's decisions over the outgoing lane's
+recent 32-case window are compared per suite — **retained** (cases the old
+lane answered acceptedly that the challenger answers the same way) and
+**repeated** (previously-abstained cases the challenger now answers); the
+gate adopts only when the score clears the incumbent, declines first on
+`NoEvidence` (a cold boot swaps on artifact correctness alone), and installs
+once, from-base pure, never double-filing an outcome (stride decontamination
+in the producer). The gate is **evidence, not a promotion claim**: a refusal
+keeps the incumbent lane, and the swap verdict is recorded for the lane's
+own audit — it never widens what may serve. G3 evidence on record: the wire
+gate (`examples/adoption_swap_g3.rs`, six bars over the real HTTP edge,
+byte-identity pinned at the wire) and the real-store arena cell
+(`examples/adoption_swap_g3_arena.rs`, [`.benchmarks/066_issue031_g3_arena_real_store_cell.md`](.benchmarks/066_issue031_g3_arena_real_store_cell.md)
+— the real regression pair caught: specialist 0.375 vs the served modelless
+tier 0.000 on the same 32-case window, gate refused, both orderings agree).
+Runs behind `--features adoption_gate`; disarmed builds are byte-identical.
