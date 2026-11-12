@@ -212,6 +212,10 @@ required-features = ["tetris"]
 name = "tetris_round5_scale_probe"
 required-features = ["tetris"]
 
+[[example]]
+name = "adoption_swap_g3"
+required-features = ["adoption_gate"]
+
 # Vendored fork of `block` 0.1.6 (katgpt-rs issue 968): upstream is abandoned
 # and its `static of uninhabited type` is a future-incompat headed to a hard
 # error. `metal` (via riir-infer-laya's macOS-scoped dep, under
