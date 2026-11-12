@@ -550,7 +550,14 @@ impl<const N: usize> SuiteServer<N> {
     /// over the seat engine alone. The identity label join is built from
     /// the seat's own labels so the bridge/noul resolution paths keep
     /// their Named-join shape; under A0 the specialist is never scored.
-    fn from_parts_opt(
+    ///
+    /// PUBLIC since the adoption-gate arena cell (instinct issue 031's
+    /// G3): the cell boots the specialist-at-A1 and the ReflexOnly-at-A0
+    /// as REAL lane pairs in ONE process — the manifest row pins one
+    /// posture, so the pair construction needs the explicit-arm seam.
+    /// The serving-shape laws still hold: `spec: None` at a non-A0 arm
+    /// refuses below, and the escalate/ENC walls run as everywhere.
+    pub fn from_parts_opt(
         suite: &'static str,
         seat: Seat,
         spec: Option<crate::specialist::Specialist>,
