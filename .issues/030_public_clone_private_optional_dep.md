@@ -2,6 +2,8 @@
 
 **Lease closed:** zed-7423d19b@amo epoch 1794437057 (interim (d) landed 2026-11-12, same session; the delegated verdict recording the decision: session 160062da, AGREE)
 **Status:** OPEN — interim posture (d) landed 2026-11-12 (this commit:
+
+**Claimed:** zed-amo, 1794536929000, expires 2026-11-13T04:28:49Z — posture-ladder disposition of the two unchecked boxes ((e) record-only and the owner-acts T2)
 README §Build sibling pins + the BOUNDARY clone-wall note +
 `scripts/check_readme_path_deps.sh`, per the delegated Claude verdict,
 session 160062da, AGREE). The public clone is documented browse-only,
