@@ -199,8 +199,8 @@ budget  = { load = "eager", max_payload_mb = 16 }
 suite   = "winogrande_jdi"
 class   = "hosted_only"
 posture = { arm = "A0" }                                          # the artifact-less cheap leg (no winner artifact exists for an unserved panel suite — the modelless tier IS the cheap arm, the emotion_syn row's shape; the fit's capture-cheap read 0.4830 ≈ chance, exactly the pre-registered posture)
-# Issue 059's T3 arm (the Bench 091 pre-registered seat, 2026-11-08 — the same delegated-owner GO family + the licence SETTLED MIT, Research 019 finding 1): ESC composed 0.7269 vs cheap 0.4830 (Δ +0.2439, paired LB95 +0.2191 > 0) at rate 51.1% in-window (cal 52.0%, shift −0.9pp inside the 10% guard) — all three arm gates pass; gate rho 0.45 (ESC_GATE_RHOS), thresholds score 0.000 / dist 0.538 (re-fit live at boot on the seat). Think leg = mammoth-1 REMOTE via the esc-systemone-adapter (the SAME think_file + operator-attested weights digest as massive/banking77 — the digest attests the build, not the suite; winogrande's 2-option arity re-verified at the join). The JDI-panel rows are BENCHMARK-conditioned arms: they arm the record + the serve posture for the panel folds, never a real-traffic claim — the contamination shadow read is REQUIRED before any such claim (public WINOGRANDE mammoth-training unverified), and the composed cal→test shift is NOT measured (the rate-transfer guard −0.9pp is the only transfer evidence). COST: escalations pay the teacher's latency (Bench 082 posture figure).
-escalate = { think_file = "mammoth_esc_adapter_v1", think_digest = "blake3:627f1fc03779b21ac08bd18997e3f7c486f9d3632dca873886d4bf2ce69d37b5", margin = 0.05, min_rate = 0.15, max_rate = 0.60 }
+# Issue 059's T3 arm (the Bench 091 pre-registered seat, 2026-11-08 — the same delegated-owner GO family + the licence SETTLED MIT, Research 019 finding 1); RE-ARMED 2026-11-16 at ρ 0.60 (plan 018, verdict 7c0cb628 AGREE): ESC composed 0.7979 vs cheap 0.4830 (Δ +0.3149, paired LB95 +0.2881 > 0) at test rate 66.1% (cal 62.5%, shift +3.6pp inside the 10% guard) — the ρ 0.60 fit row measured in the 091 pass; the arm decision RESTS ON THAT PASS (the re-read under the pre-registered window is a deterministic recomposition of the same frozen rows, not independent confirmation) and the figure is POST-HOC-DERIVED. The per-suite window (ESC_RATE_WINDOWS, 0.15/0.70 — exactly one table row, esc_gates-pinned) is cost-rationaled: the cheap leg measures AT CHANCE (0.4830 vs 0.500) and this row is BENCHMARK-conditioned (never real traffic); the whole validation split IS the test panel (test_cap 0 — no held-out cal pool, the val-cal repair unavailable by construction, disclosed). thresholds score 0.000 / dist 0.647 (re-fit live at boot on the seat). Think leg = mammoth-1 REMOTE via the esc-systemone-adapter (the SAME think_file + operator-attested weights digest as massive/banking77 — the digest attests the build, not the suite; winogrande's 2-option arity re-verified at the join). The JDI-panel rows are BENCHMARK-conditioned arms: they arm the record + the serve posture for the panel folds, never a real-traffic claim — the contamination shadow read is REQUIRED before any such claim (public WINOGRANDE mammoth-training unverified), and the composed cal→test shift is NOT measured (the rate-transfer guard +3.6pp is the only transfer evidence). COST: escalations pay the teacher's latency (Bench 082 posture figure).
+escalate = { think_file = "mammoth_esc_adapter_v1", think_digest = "blake3:627f1fc03779b21ac08bd18997e3f7c486f9d3632dca873886d4bf2ce69d37b5", margin = 0.05, min_rate = 0.15, max_rate = 0.70 }
 pin_keys = []
 budget  = { load = "eager", max_payload_mb = 16 }
 
@@ -416,7 +416,7 @@ fn arsenal_manifest_bytes_are_pinned_byte_for_byte() {
 /// them); the lockstep rethink-side pins (esc_gates 22/22 + ESC_POSTURES +
 /// ESC_GATE_RHOS) landed in the same family.
 const PINNED_PRODUCTION_MANIFEST_DIGEST: &str =
-    "blake3:4fdd953b3eff5a36ee0672f9bf1ec69387ccb7daeeeccbe5175ea8fa29354996";
+    "blake3:84f539bdd4fa9a5f6a16d51569591459e571a8b7539ec56965e868185e6a9ce3";
 
 #[test]
 fn production_manifest_bytes_are_pinned_byte_for_byte() {
@@ -1348,8 +1348,9 @@ fn escalate_grammar_pins_the_armed_production_state() {
         );
         assert_eq!(
             (esc.min_rate, esc.max_rate),
-            (0.15, 0.60),
-            "the rate window is the GOAT's"
+            (0.15, 0.70),
+            "the rate window is the GOAT's (plan 018's pre-registered per-suite window \
+             — rethink ESC_RATE_WINDOWS, exactly one row)"
         );
         assert_eq!(
             esc.think_digest,
