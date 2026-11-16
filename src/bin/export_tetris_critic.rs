@@ -42,7 +42,7 @@ use riir_instinct::tetris_blend::collect_blended;
 use riir_instinct::tetris_cont::{encode_sample_v1, MAGIC_V1, SAMPLE_V1_BYTES};
 use riir_instinct::tetris_critic::{collect_teacher, collect_teacher_blended, TrainedMlp};
 use riir_instinct::tetris_lane::{Regime, CHAMPION_ID, TEACHER_PROBE_SALT, TEACHER_RNG_SALT};
-use serde_json::{json, Value};
+use serde_json::json;
 use std::path::PathBuf;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
