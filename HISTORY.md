@@ -273,7 +273,7 @@ Owner call 2026-09-30 to retire the Instinct brand was superseded by riir-ai Pro
 Stale int-label `xnli_en_winner_v1.bin` misread as a CONTEXT join after reflex 077 content-bound labels. T1 `383494d`: int-spelled same-arity artifact now falls to `Named(seat)` and refuses at BOOT naming the drift.
 T2: rethink G5 replay retired-with-reason (riir-rethink `cdea009`); alias grammar and re-mint declined (xnli licence-demoted). T3: no ag_news specialist artifact exists.
 
-## 2026-11-02 — Plan 326 T8–T12: the seat-side points-drain meter (report-only)
+## 2026-11-02 — riir-refine Plan 326 T8–T12: the seat-side points-drain meter (report-only)
 
 Opt-in `points_drain` feature: report-only day counters (salted daily-rotating BLAKE3 source hash), per-call Ed25519 attestation verify (failure means anonymous, never error), N=128 replay-window bitmap, env-gated enforcement OFF, daily export to plane or local JSONL (riir-refine Plan 326 Phase 2, Proposal 027).
 Gotcha: window shift must move seen bits toward HIGHER indices. Deviation: `X-Points-Seq` is an untrusted header, seq read from verified payload bytes [42..50]. Boundary adds riir-ledger + verify-only ed25519-dalek.
