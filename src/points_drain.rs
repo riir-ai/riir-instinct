@@ -19,7 +19,8 @@
 //!   bind the call to a contribution-points account without any
 //!   registry — `blake3(pubkey) == account`, then a detached Ed25519
 //!   signature over the wire crate's ONE signing-bytes home
-//!   ([`riir_ledger::attest::attestation_signing_bytes`]). ANY failure
+//!   ([`ledgerplane::attest::attestation_signing_bytes`] — the vendored
+//!   wire tier). ANY failure
 //!   (bad hex, hash mismatch, bad sig, replayed seq) → the
 //!   ANONYMOUS posture, never an error response.
 //!   ⚠ Deviation note (ratify in 027): the signed message embeds
@@ -47,7 +48,7 @@
 //!   meter degraded.
 //! - **T12 — the aggregate export**: a background thread (never on the
 //!   /decide path) drains completed days at the UTC rollover and POSTs
-//!   [`riir_ledger::dto::DrainUsageExport`] to `<plane>/points/usage`
+//!   [`ledgerplane::dto::DrainUsageExport`] to `<plane>/points/usage`
 //!   with the service bearer. Without a configured plane (or on any
 //!   POST failure) the rows land in a LOCAL daily JSONL dump beside the
 //!   seat's state dir — that dump is the `P`-sizing data. Counts are
@@ -69,8 +70,9 @@ use std::sync::Mutex;
 use std::sync::OnceLock;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
+use crate::ledgerplane;
+use crate::ledgerplane::dto::{DrainUsageExport, DrainUsageRow, UsageState};
 use ed25519_dalek::{Signature, Verifier, VerifyingKey};
-use riir_ledger::dto::{DrainUsageExport, DrainUsageRow, UsageState};
 
 /// The drain attestation header names (lowercase comparison form; the
 /// wire spells them `X-Points-Account` / `X-Points-Pubkey` /
@@ -400,7 +402,7 @@ pub fn verify_attestation(headers: Option<&AttestHeaders>, body: &[u8], utc_day:
     // re-derivation). The seq rides in from the untrusted header ONLY
     // to complete the payload; the signature below authenticates it.
     let body_hash = blake3::hash(body);
-    let payload = riir_ledger::attest::attestation_signing_bytes(
+    let payload = ledgerplane::attest::attestation_signing_bytes(
         &account,
         utc_day,
         seq_from_header,
@@ -998,7 +1000,7 @@ impl Meter {
         }
         let state: UsageState = serde_json::from_str(&body).ok()?;
         // Fail-safe: a version or account mismatch is a failed read.
-        if state.format_version != riir_ledger::FORMAT_VERSION
+        if state.format_version != ledgerplane::FORMAT_VERSION
             || state.account_id_hex != account_hex
         {
             return None;
@@ -1040,7 +1042,7 @@ impl Meter {
                 delivered = true;
             } else {
                 let export = DrainUsageExport {
-                    format_version: riir_ledger::FORMAT_VERSION,
+                    format_version: ledgerplane::FORMAT_VERSION,
                     rows: rows.to_vec(),
                 };
                 match serde_json::to_string(&export) {

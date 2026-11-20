@@ -6,19 +6,20 @@ Proposal-052 Phase-C flip landed 2026-10-03, owner-confirmed 2026-11-07
 --post-split`). Deliberately NOT the bare C3b leaf form — the bare
 `Visibility: public` line enrolls the katgpt-rs-only public-leaf law, and
 this repo composes the public siblings `riir-reflex` + `reflexer-vessel`
-plus the opt-in PRIVATE `riir-ledger` serde leaf (`points_drain`; the
-default build never resolves it). crates.io `publish = false` is a
+(the `points_drain` seat consumes the wire tier vendored in-tree at
+`src/ledgerplane/` — its canonical home, the PRIVATE `../riir-ledger`,
+is NOT a dependency; see the amended dep note below). crates.io
+`publish = false` is a
 registry posture, unrelated to GitHub visibility. The claim itself is
 enforced by the contract script's C10 visibility-honesty row
 (riir-instinct Issue 029: this line used to read "private TODAY" while
 GitHub measured PUBLIC).
 
-The public clone is resolve-incomplete until Issue 030's posture lands:
-cargo reads every sibling path-dep manifest at workspace load
-(`optional = true` does not defer it), so a clone without the private
-sibling checked out beside it fails every `cargo` command at resolution.
-The required sibling set and their visibility are pinned in README
-§Build; `scripts/check_readme_path_deps.sh` enforces the pin.
+The public clone builds at every posture (issue 030 RESOLVED
+2026-11-20 — the owner call: `riir-ledger` stays private; the seat's
+wire tier is vendored in-tree, so resolution needs no private
+checkout). The required sibling set and their visibility are pinned in
+README §Build; `scripts/check_readme_path_deps.sh` enforces the pin.
 
 > The single source of truth for what may live in and depend on this repo.
 > Audited by the `boundary-guard` skill and
@@ -87,7 +88,6 @@ teaching/product sibling of the public modelless engine `../riir-reflex`:
 | katgpt-core | `../katgpt-rs/crates/katgpt-core` | `default-features = false`, features `best_belief` + `sigmoid_calibration`. Consumed: `exact_sigmoid` (the score readout, never softmax — `src/specialist.rs`), `best_belief_score` (the ε-quantile Beta LCB — the pre-registration instrument's selector, `src/stats.rs`), `SigmoidGateCalibrator` (the G1 Platt face, the arena) — measured at P3 T1/T2 (2026-09-26/27) |
 | riir-reflex | `../riir-reflex` | lib dep, features `modelless,nb_scope,nb_ridge,option_cond`; consumed: `embed::hashed_tokens_into` (the ONE tokenizer law) + the `nb_scope` tables for the hybrid composition + `harness::{suites, metrics, runner::seat}` (the seat — byte-identical questions) — measured at P3 T1/T3. **Never a dep on the harness's lane runners.** The opt-in `laya-face`/`laya-face-metal` features forward `laya-riir`/`laya-riir-metal` for the arena's G2 paired face (the rename of the retired `arena-laya*` spellings) |
 | `reflexer-vessel` | `../riir-reflexer/crates/reflexer-vessel` | optional (the `vessel` feature); **public read only** — `decode`/`open`/`peek`/`PinTable`/`ApplyState`/`check_monotonic`; the HOSTED-ONLY class refuses by the format crate's own law, which is exactly why the hosted reader lives in the moat — the public boot measured at the B2 move (2026-10-03) |
-| riir-ledger | `../riir-ledger` | optional (the `points_drain` feature; landed WITH its first consumer, Plan 326 T8–T12, 2026-11-02): the points-plane wire DTOs + the ONE attestation signing-bytes home — a zero-dep serde leaf, consumed never re-derived. The default build never resolves it |
 | ed25519-dalek (lib, optional) | crates.io | **one narrow optional-lib row** (amended 2026-11-02, Plan 326 T9): verify-only Ed25519 for the hosted-seat drain attestation behind `points_drain`; `default-features = false`. The default and public teaching builds still carry zero ed25519 in their lib surface (the carve law below holds where it was written) |
 | katgpt-tetris | `../katgpt-rs/crates/katgpt-tetris` | the Tetris lane's shared engine (Issue 009 T5/T6): sim + lookahead + champion genome, opt-in `tetris` feature — never a fourth engine; NOT a game runtime. Consumed: `sim`, `lookahead`, `rulebook` — measured 2026-09-27 |
 | katgpt-core `karc_forecaster` | `../katgpt-rs/crates/katgpt-core` | in the `tetris` feature set (Issue 009 T8's modelless arm): the Plan-308 KARC fit substrate. Opt-in with the lane — measured Bench 009 |
@@ -103,6 +103,17 @@ Amended 2026-11-02: `ed25519-dalek` regained the narrow optional-lib row above
 meter runs on std sync primitives — a `try_lock` miss IS the tiered-fail
 store-down branch, and at seat call volumes a held mutex on an O(1) path is
 far under the decision latency.
+Amended 2026-11-20 (issue 030's disposition — the owner call):
+`riir-ledger` is REMOVED as a dependency (option (a) refused — the repo
+stays private). The seat consumes the vendored `ledgerplane` wire tier
+(`src/ledgerplane/`; the `katplane`/`ragplane` law, riir-refine issue
+221): the canonical home stays the PRIVATE `../riir-ledger`
+(provenance sha in every file header), `scripts/vendor_ledgerplane.sh`
+is the only sanctioned write path (never hand-edit one side), and
+`tests/ledgerplane_parity.rs` pins the drift — committed known-answer
+vectors run everywhere (a public clone needs no sibling), and the
+sibling-present half byte-compares every file. The private repo
+remains the points plane's authority.
 The `[patch."https://github.com/katopz/katgpt-rs"]` table left with them
 (it existed for the riir-kat → riir-auth → riir-neuron-db git-reached
 tree; no git-URL katgpt dep remains in this graph).

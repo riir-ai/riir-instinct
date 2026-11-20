@@ -810,7 +810,7 @@ dependencies = [
 
 [[package]]
 name = "katgpt-core"
-version = "0.5.0"
+version = "0.6.1"
 dependencies = [
  "arrayvec",
  "blake3",
@@ -829,7 +829,7 @@ dependencies = [
 
 [[package]]
 name = "katgpt-hla"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "katgpt-types",
 ]
@@ -854,7 +854,7 @@ dependencies = [
 
 [[package]]
 name = "katgpt-types"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "blake3",
  "fastrand",
@@ -1297,20 +1297,11 @@ dependencies = [
  "katgpt-core",
  "katgpt-tetris",
  "reflexer-vessel",
- "riir-ledger",
  "riir-reflex",
  "serde",
  "serde_json",
  "tempfile",
  "toml",
-]
-
-[[package]]
-name = "riir-ledger"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_json",
 ]
 
 [[package]]

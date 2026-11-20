@@ -10,3 +10,24 @@
 # pruned WITH the annotations in the same commit — the decstat feature left
 # the tree, so the amnesty had nothing left to pardon. A NEW moat reference
 # in the open tree is a finding, never a row here.
+
+# examples/adoption_swap_g3_arena.rs:instinct_specialists — the issue-031 G3
+# arena evidence cell's winners source (../riir-train/data/instinct_specialists,
+# the train-side specialists dir): a sibling DATA path read by a
+# feature-gated dev example (skips loud when absent), never a lib/serve
+# surface and never moat CODE. Landed with the issue-030 disposition
+# commit (2026-11-20) after the example's own landing (0964fdd) left the
+# fence RED on develop unnoticed (CI is main-only; the fence is a local
+# lane). Prune at any move family that retargets the example.
+examples/adoption_swap_g3_arena.rs:instinct_specialists
+
+# tests/serve_gates.rs:EncoderLane — the token sits INSIDE the inline
+# production manifest's provenance comment (the typed row's record note),
+# byte-pinned to the canonical home (rethink arsenal.toml L156, the
+# c57b234 lockstep, law A6): editing it here re-pins the digest AND
+# breaks the cross-repo byte-identity. The reword belongs to the
+# canonical home (a rethink-side edit + lockstep re-sync); until then the
+# fence token is pardoned for THIS file only. Pre-existing at HEAD
+# (landed with the lockstep); found by the issue-030 disposition run
+# (2026-11-20). Prune when the canonical home rewords.
+tests/serve_gates.rs:EncoderLane

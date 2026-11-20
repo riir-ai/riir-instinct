@@ -19,14 +19,17 @@ needs these repos checked out beside it:
 - `katgpt-rs` (public)
 - `riir-reflex` (public)
 - `riir-reflexer` (public)
-- `riir-ledger` (private) — required to resolve the workspace; used only
-  by the opt-in `points_drain` feature
 
-Until the private-sibling edge is resolved (tracked in
-[Issue 030](.issues/030_public_clone_private_optional_dep.md)), a public
-clone can be read and browsed but not built: any `cargo` command fails
-when it resolves dependencies. `scripts/check_readme_path_deps.sh`
-guards this section.
+That is the whole sibling set: the private-sibling edge is RESOLVED
+(Issue 030's disposition, 2026-11-20 — the owner call is that
+`riir-ledger` stays private). The opt-in `points_drain` seat consumes
+the wire tier vendored in-tree at `src/ledgerplane/` (canonical home:
+the private `../riir-ledger`, provenance-pinned in every file header;
+`scripts/vendor_ledgerplane.sh` is the only sanctioned write path and
+`tests/ledgerplane_parity.rs` pins the drift). A fresh public clone
+builds at every posture — `cargo check` and `cargo check --features
+points_drain` included.
+`scripts/check_readme_path_deps.sh` guards this section.
 
 ## Hosted-seat fair-use metering — what the seat records (Plan 326 T8)
 

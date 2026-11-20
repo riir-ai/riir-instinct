@@ -46,6 +46,14 @@ pub mod receipt;
 /// the /decide path is byte-identical without it.
 #[cfg(feature = "runetrace_loop")]
 pub mod scene_loop;
+/// The vendored contribution-points wire tier (`ledgerplane` — the
+/// `katplane`/`ragplane` naming law; issue 030's disposition: the
+/// canonical home is the PRIVATE sibling `../riir-ledger`, the wire is
+/// public). Vendored verbatim by `scripts/vendor_ledgerplane.sh` (the
+/// only sanctioned write path — never hand-edit one side), drift-pinned
+/// by `tests/ledgerplane_parity.rs`; gated with its only consumer.
+#[cfg(feature = "points_drain")]
+pub mod ledgerplane;
 /// The hosted-seat fair-use meter (Plan 326 T8–T12 / Proposal 027):
 /// report-only day counters, the per-call attestation verify, the N=128
 /// replay window, the config-gated enforcement hooks and the daily

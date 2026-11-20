@@ -41,12 +41,6 @@ reflexer-vessel = { path = "../riir-reflexer/crates/reflexer-vessel", optional =
 # the lane).
 katgpt-tetris = { path = "../katgpt-rs/crates/katgpt-tetris", optional = true }
 fastrand = { version = "2", optional = true }
-# The points-drain wire (Plan 326 T8–T12 / Proposal 027): the seat-side
-# fair-use meter consumes the wire crate's DTOs + the ONE attestation
-# signing-bytes home — a zero-dep serde leaf, consumed never
-# re-derived. Optional under `points_drain`; the default build never
-# resolves it (the BOUNDARY.md row landed with this first consumer).
-riir-ledger = { path = "../riir-ledger", optional = true }
 # Ed25519 VERIFY for the per-call drain attestation (Plan 326 T9) —
 # optional under `points_drain`; the default and public teaching builds
 # still carry zero ed25519 in their lib surface (the 2026-10-03 carve
@@ -116,8 +110,12 @@ tetris = ["dep:katgpt-tetris", "dep:fastrand", "katgpt-core/planning"]
 # aggregate export. Opt-in — the default build never resolves the deps
 # and the /decide path is byte-identical (G3); the enforcement numbers
 # live in env config that does not ship pre-ratification (absent = the
-# meter counts and verifies, never refuses).
-points_drain = ["dep:riir-ledger", "dep:ed25519-dalek"]
+# meter counts and verifies, never refuses). The wire tier is the
+# vendored `ledgerplane` module (issue 030's disposition: the PRIVATE
+# `../riir-ledger` path dep is GONE — the canonical home stays private;
+# `scripts/vendor_ledgerplane.sh` re-vendors,
+# `tests/ledgerplane_parity.rs` pins the drift).
+points_drain = ["dep:ed25519-dalek"]
 # The teacher-check bench target (007) + the critic-arm bench target
 # (009): select their bench targets behind the lane feature.
 tetris_goat = ["tetris"]
@@ -158,6 +156,15 @@ required-features = ["tetris"]
 # feature (the tetris_critic_parity row's own class).
 [[test]]
 name = "points_drain_gates"
+required-features = ["points_drain"]
+
+# The ledgerplane drift law (issue 030's disposition): committed
+# known-answer vectors run everywhere (a public clone needs no
+# sibling); the sibling-present half byte-compares the vendored wire
+# tier against the canonical private home (skip-LOUD without
+# ../riir-ledger).
+[[test]]
+name = "ledgerplane_parity"
 required-features = ["points_drain"]
 
 # The arsenal GOAT bench (Proposal 001 T8) — whole-target gated; the

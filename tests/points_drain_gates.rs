@@ -35,12 +35,12 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use ed25519_dalek::{Signer, SigningKey};
+use riir_instinct::ledgerplane::attest::attestation_signing_bytes;
+use riir_instinct::ledgerplane::dto::{DrainUsageExport, DrainUsageRow, UsageState};
 use riir_instinct::points_drain::{
     resolve_client_ip, source_key, AttestHeaders, Attested, Budgets, Meter, MeterConfig,
     PlaneCreds, ReplayWindow, SourceCount, Verdict,
 };
-use riir_ledger::attest::attestation_signing_bytes;
-use riir_ledger::dto::{DrainUsageExport, DrainUsageRow, UsageState};
 use tempfile::TempDir;
 
 const DAY_A: &str = "2026-11-01";
@@ -181,7 +181,7 @@ fn usage_stub(
     status: u16,
 ) -> (String, Arc<Mutex<Vec<Req>>>) {
     let answer = serde_json::to_string(&UsageState {
-        format_version: riir_ledger::FORMAT_VERSION,
+        format_version: riir_instinct::ledgerplane::FORMAT_VERSION,
         account_id_hex: account.to_string(),
         joined,
         balance,
@@ -743,7 +743,10 @@ fn export_posts_drain_usage_export_with_bearer() {
     assert_eq!(path, "/points/usage");
     assert_eq!(auth.as_deref(), Some("Bearer svc-tok"));
     let export: DrainUsageExport = serde_json::from_slice(body).expect("parse export");
-    assert_eq!(export.format_version, riir_ledger::FORMAT_VERSION);
+    assert_eq!(
+        export.format_version,
+        riir_instinct::ledgerplane::FORMAT_VERSION
+    );
     assert_eq!(export.rows, rows);
 }
 
