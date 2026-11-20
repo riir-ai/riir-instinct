@@ -1,18 +1,21 @@
 # HISTORY.md — riir-instinct
 
-Compacted 2026-10-30: every `##` heading kept verbatim, one compact entry per record (≤2 short lines); the full pre-compaction text is in git history (pre-compaction HEAD 844f9170d72d). Operational rules live in `AGENTS.md`.
+Compacted 2026-11-20: every heading kept verbatim, bodies <=2 lines of durable facts (pre-2026-10-30 entries compacted earlier); full pre-compaction text in git history (pre-compaction HEAD 96b600f). Operational rules live in `AGENTS.md`.
 
 ## 2026-11-20 — Issue 030 RESOLVED: `riir-ledger` stays private; the seat's wire tier vendored in-tree (`ledgerplane`) — the public clone builds
 
-**Status: Resolved.** Owner call: option (a) REFUSED — the ledger repo stays private. Landed the vendored-wire posture (the `katplane`/`ragplane` law, refine issue 221): the drain seat's tier (`dto` + `attest` + `privacy` + `FORMAT_VERSION`) vendored verbatim at `src/ledgerplane/`, provenance-pinned to the canonical sibling @ `687aa8ffd7d8`, `scripts/vendor_ledgerplane.sh` the only sanctioned write path, drift pinned by `tests/ledgerplane_parity.rs` (committed known-answer vectors run everywhere; the sibling-present half byte-compares every file + pins `mod.rs`'s const/re-exports, skip-LOUD without the checkout). The private path dep is GONE — public-clone proof: a `/tmp` copy with only the public siblings symlinked passes `cargo metadata` + `cargo check` at default AND `points_drain`. Fence GREEN + self-test 7/7 — with two PRE-EXISTING REDs found by the post-edit run, both adjudicated as allowlist rows WITH reason (never silently): the issue-031 arena example's train-side winners path (0964fdd — a gated dev example reading sibling DATA, never moat code) and the `EncoderLane::` token INSIDE the inline production manifest's provenance comment (the c57b234 lockstep pin — the bytes are pinned to rethink arsenal.toml L156 byte-identically, so the reword belongs to the canonical home + lockstep re-sync; an in-place reword was measured and REVERTED — it re-pins the digest and breaks the cross-repo identity). Boundary contract clean (33 repos, 521 edges); README §Build de-staled (`check_readme_path_deps` PASS).
+Resolved. riir-ledger stays private (owner call); the drain seat's wire tier is vendored at `src/ledgerplane/` (provenance @ `687aa8ffd7d8`), sole write path `scripts/vendor_ledgerplane.sh`, drift pinned by `tests/ledgerplane_parity.rs`.
+Public-clone proof: cargo check passes at default and `points_drain`; fence GREEN. Never reword the arsenal manifest provenance comment in place (re-pins digest, breaks cross-repo identity).
 
 ## 2026-11-10 — Issue 032 CLOSED NEGATIVE: the pick_latch eviction seat is a structural no-op on an evict-on-consult policy
 
-**Status: Resolved (negative).** The wiring landed opt-in (feature `pick_latch` forwards katgpt-core's producer; `INSTINCT_LRU_LATCH` promote-only; byte-identical off — G1 purity, G2 identity incl. serve gates 24/24, G4 alloc-free, determinism pinned) and the G3 GOAT measured honest-negative across three serve-stream cells (serial round-robin, weighted-mixed, concurrent-with-retries, all at capacity 2 on lazy A0 rows): armed == unarmed byte-identical, zero holds. The consult trace names the mechanism — in an evict-on-consult policy the hold always names the just-evicted lane, which is absent (Unloaded, or the incoming itself) at the next consult, so the challenger clears trivially every time; the pre-registered flip-rate bar is unmeetable BY CONSTRUCTION, not by calibration. Kept byte-identical-off for a future sweeper-shaped policy; the reflex Issue-116 twin (the pick_domain seat, a stable-table axis) is NOT implicated. Full record: git history of the removed `.issues/032` file (this entry's commit).
+Resolved (negative). `pick_latch` wiring landed opt-in, byte-identical off; G3 GOAT across three serve-stream cells: armed == unarmed, zero holds.
+Mechanism: evict-on-consult means the hold names an already-evicted lane, so the flip-rate bar is unmeetable by construction. Revisit only for a sweeper-shaped policy.
 
 ## 2026-11-07 — Issue 029 CLOSED: the visibility claim now matches GitHub, and the claim class is gate-enforced (C10)
 
-**Status: Resolved.** gh measured the repo PUBLIC while BOUNDARY.md read "private TODAY" — the Proposal-052 Phase-C flip landed 2026-10-03, the line never did; a private note was nearly filed on the stale line's strength. Owner call: "we open for public good". Fix `6c40fca`: an honest QUALIFIED public claim (the bare `Visibility: public` line enrolls the workspace C3b katgpt-rs-only leaf law, and instinct composes public siblings + the opt-in PRIVATE `riir-ledger` serde leaf — it is NOT a leaf) + the README title/status de-staled. The drift class got its own gate row: **C10 visibility honesty** in `../riir-ai/scripts/ci_boundary_contract.sh` (`bd20b517b`) — every declared Visibility claim is compared against gh-measured GitHub visibility (slug from the origin remote, first-word parse, LOUD skip without gh/remote); stub-gh self-test arms prove both drift classes fire and a skip is never a green. First workspace verdict: 5/5 claims match (reflex-site/instinct/reflexer public=PUBLIC, refab/rethink private=PRIVATE). Fence GREEN post-edit. (`6c40fca` · `bd20b517b`)
+Resolved (`6c40fca`, `bd20b517b`). BOUNDARY.md claimed private while GitHub is public; now a qualified public claim (not a katgpt-rs-only leaf; composes opt-in private riir-ledger).
+New riir-ai boundary gate row C10 compares declared Visibility to gh-measured visibility (loud skip without gh); 5/5 match.
 
 ## 2026-10-30 — Issue 024 CLOSED: serve_edge request read under a TOTAL deadline (`RequestDeadlineGuard`)
 
@@ -267,69 +270,20 @@ Owner call 2026-09-30 to retire the Instinct brand was superseded by riir-ai Pro
 
 ## 2026-10-31 — Issue 027 CLOSED + removed: a stale int-label artifact on a content-bound seat was misread as a CONTEXT join
 
-reflex 077 (`b3520a5`, 2026-10-08) content-bound the xnli/ag_news seat labels. The pre-077 `xnli_en_winner_v1.bin` still carries `"0","1","2"`, so `seat_join` returned Context and every request refused with a misleading bridge error. The parity-gated research G5 replay was red, unseen, from 10-08 to 10-31. **T1** (`383494d`): the mirror producer-contract break (a named seat over an int-spelled `"0".."n-1"` artifact of the same arity) now falls through to `Named(seat)`, so the join refuses at BOOT naming the drift. A unit row was added; no production row has the shape. **T2** (decided, not owner-gated): the rethink G5 replay is RETIRED-WITH-REASON at riir-rethink `cdea009`. The boot refusal is its pinned outcome, any other error reds, and a re-minted named-label artifact re-arms it unchanged. The declared-ClassLabel-alias grammar (option B) and a riir-train re-mint (option C) were declined: xnli is licence-demoted research posture, so the value does not cover a grammar change or a frozen-read re-cut. **T3**: no ag_news specialist artifact exists in the fleet (the 4090 carries only the `ag_news_encoder_v1.bin` think head), so the shape cannot arise there. With the corpus synced to amo, ag_news's ESC gate-fit pin reproduces post-077, and rethink esc_gates reads 18/18.
+Stale int-label `xnli_en_winner_v1.bin` misread as a CONTEXT join after reflex 077 content-bound labels. T1 `383494d`: int-spelled same-arity artifact now falls to `Named(seat)` and refuses at BOOT naming the drift.
+T2: rethink G5 replay retired-with-reason (riir-rethink `cdea009`); alias grammar and re-mint declined (xnli licence-demoted). T3: no ag_news specialist artifact exists.
 
 ## 2026-11-02 — Plan 326 T8–T12: the seat-side points-drain meter (report-only)
 
-Landed the hosted-seat half of the points drain (riir-refine Plan 326 Phase 2;
-the design contract is Proposal 027): the opt-in `points_drain` feature carries
-the whole meter — **T8** report-only day counters keyed `(account, utc_day)` +
-`(source_hash, utc_day)`, the per-source key a salted daily-rotating
-BLAKE3(/24-or-/64) hash kept in memory for the day only (the plain-words
-disclosure joined README beside the T16.1 law's canonical home); **T9** the
-per-call attestation verify (`blake3(pubkey) == account` + detached Ed25519
-over `riir_ledger::attest::attestation_signing_bytes`, any failure → the
-anonymous posture, never an error); **T10** the fixed N=128 replay-window
-bitmap (out-of-order concurrent runs ACCEPT — the shift-direction bug a gate
-caught on first run: seen bits must move toward HIGHER indices on slide, the
-wrong-way shift silently re-admitted replays); **T11** enforcement hooks
-env-gated OFF (absent/malformed A/B/R/P = report-only, the shipped posture —
-the tiered fail: `try_lock` miss ⇒ per-source OPEN, billable CLOSED-to-
-anonymous; joined/balance read = plane `/points/usage-state` behind a TTL
-cache, failed reads demote to per-source); **T12** the daily aggregate export
-(plane POST `DrainUsageExport` with the bearer, else/failed → the LOCAL daily
-JSONL dump — the P-sizing data; counts never lost). Declared deviations, both
-ratify-in-027 items: (1) `X-Points-Seq` — Ed25519 cannot message-recover, so
-the seq rides an UNTRUSTED fourth header used only to reconstruct the payload;
-the signature authenticates it and the seat reads the seq out of the VERIFIED
-payload bytes [42..50]; (2) `papaya` stayed moot-only per the 052 carve — the
-counters run on std sync primitives. Boundary: `riir-ledger` (zero-dep serde
-leaf) + a narrow verify-only `ed25519-dalek` optional-lib row landed WITH this
-first consumer, BOUNDARY.md amended in-repo; `ci_boundary_contract.sh` clean
-(32 repos, 481 edges). Gates: clippy `-D warnings` at default, `points_drain`,
-and `--all-features`; `cargo test` green at both feature states incl.
-`ext_seat_rerank_gates` (8/8) + `serve_gates` (23/23) + the new
-`points_drain_gates` (19); the PRE-EXISTING fence RED (`EncoderLane` doc
-mentions in `src/server.rs` + `tests/serve_gates.rs`) reproduced at a clean
-HEAD worktree — not this change's.
+Opt-in `points_drain` feature: report-only day counters (salted daily-rotating BLAKE3 source hash), per-call Ed25519 attestation verify (failure means anonymous, never error), N=128 replay-window bitmap, env-gated enforcement OFF, daily export to plane or local JSONL (riir-refine Plan 326 Phase 2, Proposal 027).
+Gotcha: window shift must move seen bits toward HIGHER indices. Deviation: `X-Points-Seq` is an untrusted header, seq read from verified payload bytes [42..50]. Boundary adds riir-ledger + verify-only ed25519-dalek.
 
 ## 2026-11-06 — Issue 028 CLOSED + removed: the twinarm probe-repair pass PoC folded on its pre-registered value gate
 
-Both legs measured, both negative, fold law executed in the fold commit `b98e759`:
-class 2 folded at T1 — the G0 collision census (record `.benchmarks/0063_g0_collision_census/`,
-landed `86a8de2`) found every suite immaterial at 2¹⁷ (census-only negative); class 1 folded
-at T2 — the G1 fixture (record `.benchmarks/0064_g1_probe_repair_fixture/`) had the machinery
-pass every structural gate and the repair beat its unrepaired base (Δ +0.24, LCB95 +0.1902)
-but LOSE to the fair b1 continue-train-on-gold baseline (best delta −0.0050, LCB95 −0.0132):
-on a linear fixture with adequate clean gold the generic move toward the gold optimum wins —
-653 sec 3's documented boundary, now measured. The fixture was pinned pre-run; re-designing
-it until the repair wins would be the threshold-iteration the pre-registration forbids.
-The fold removed `src/instinct_probe_repair.rs` + the `probe_census` bin + the `probe_repair`
-feature (no zombie module — verified post-fold: zero twinarm residue in src/, Cargo.toml,
-AGENTS.md, README); the trainer-side primitives stayed as tested capabilities (`source_events_into`,
-`bag_into_remap`/`BucketRemap`/`train_arm_a_remap`, `train_arm_a_warm`). Research lineage:
-katgpt-rs Research 653 rev 2 (the 649 × twinarm consumer fusion); lease zed-4090-4fa6 closed
-on the fold.
+Folded negative (`b98e759`): G0 census `86a8de2` found every suite immaterial at 2^17; G1 fixture repair beat its base (+0.24) but lost to the continue-train-on-gold baseline (best delta -0.0050, LCB95 -0.0132).
+Removed `instinct_probe_repair`, `probe_census`, `probe_repair` feature; trainer primitives kept. Never re-tune the pinned fixture until the repair wins (katgpt-rs Research 653).
 
 ## 2026-11-06 — Issue 025 DECLINED + removed: `EscalateSpec` precision-floor grammar (no gain proven)
 
-Owner rule for this decision: arm only with a proven gain. Neither is present. (1) No live
-evidence: rethink Issue 047 (`e7a770a`, rethink Bench 081) showed the served lane is
-RECEIPTS-ONLY (decstat records no outcomes), so the precision/value legs are BLIND in
-production and a floor would enforce against nothing. (2) The only measurement argues
-against the knob: on the sst5 gold replay, 63 escalations scored precision 0.333 and value
-+0.254 ±0.147 per escalation, i.e. POSITIVE. Escalation already pays, so a floor has no
-failing case to fix, and arming it would widen a byte-pinned two-repo contract for zero
-proven benefit. Nothing changed in the grammar or the rethink pin; byte-identity is trivial.
-Re-open trigger (file a new issue, never reuse 025): an outcome join lands on the served lane
-AND a suite's measured value per escalation reads non-positive (95% CI excluding positive).
+Declined, no gain proven: served lane is receipts-only (riir-rethink Issue 047) so a floor enforces against nothing, and sst5 escalation value is positive (+0.254 +-0.147, precision 0.333).
+Re-open (new issue): outcome join on the served lane AND a suite's value per escalation non-positive at 95% CI.
