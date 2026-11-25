@@ -410,6 +410,70 @@ pub fn label_universe(rows: &[SuiteRow]) -> Vec<String> {
     l
 }
 
+/// The serving-universe translation (riir-train Issue 708, the writer fix
+/// the 2026-10-19 T4 seat refusal demanded): three suites' TRAIN rows are
+/// int-spelled here ([`suite_row`] keeps the student spelling — the
+/// training law is frozen per corpus) while their SEATS present option-key
+/// NAMES (reflex Issue 077's content binding), so a verbatim export is
+/// unjoinable — [`hybrid::seat_join`]'s Issue-027 mirror guard refuses it
+/// loud at boot, which is correct behavior for a stale artifact and wrong
+/// behavior for a fresh one. The EXPORTER therefore translates at mint
+/// time: for [`TRANSLATED_SUITES`] every class label must parse as an int
+/// in `[0, n)` and is renamed to the suite's presentation key at the SAME
+/// index (pure rename — the class rows, the pick indices and the class
+/// count never move, because the key tables ARE the index order). Every
+/// other suite exports identity — the byte-identity regression pin on the
+/// name-labeled winners is this function's own test.
+///
+/// The key tables come from reflex's ONE home (the seam; never a private
+/// copy — a table that drifts here desyncs the seat's own spelling).
+/// `sst5` is deliberately absent: its seat presents the positional level
+/// INDEX strings ("0".."4", [`QKind::Score`]'s criteria array), so the
+/// int spelling IS the seat spelling — translating it would BREAK the
+/// join. `emotion_syn` is likewise absent: [`suite_row`] already names it
+/// at the row level (the rethink plan 015 identity clause), so there is
+/// nothing to translate.
+pub fn serving_label_universe(suite: &str, labels: &[String]) -> Result<Vec<String>, String> {
+    let keys: &[&str] = match suite {
+        "ag_news" => &riir_reflex::harness::suites::AG_NEWS_KEYS,
+        "emotion" => &riir_reflex::harness::suites::EMOTION_KEYS,
+        "xnli_en" => &riir_reflex::harness::suites::XNLI_KEYS,
+        _ => return Ok(labels.to_vec()),
+    };
+    if labels.len() != keys.len() {
+        return Err(format!(
+            "suite {suite}: label universe is {} class(es), the presentation table carries {} — \
+             refusing: the corpus and the seat disagree on arity, never a partial rename",
+            labels.len(),
+            keys.len()
+        ));
+    }
+    let mut out = Vec::with_capacity(labels.len());
+    for (i, l) in labels.iter().enumerate() {
+        let idx: usize = l
+            .parse()
+            .map_err(|_| format!("suite {suite}: label {l:?} is not the int spelling — refusing"))?;
+        if idx >= keys.len() {
+            return Err(format!(
+                "suite {suite}: label {l:?} is out of the presentation table's range — refusing"
+            ));
+        }
+        if idx != i {
+            return Err(format!(
+                "suite {suite}: label {l:?} at position {i} breaks the index identity — \
+                 the sorted universe must carry ints in class order"
+            ));
+        }
+        out.push(keys[idx].to_string());
+    }
+    Ok(out)
+}
+
+/// The suites [`serving_label_universe`] translates — the exported
+/// constant so the example's banner can name the law without a second
+/// match arm drifting from it.
+pub const TRANSLATED_SUITES: [&str; 3] = ["ag_news", "emotion", "xnli_en"];
+
 /// Plan 010 T4 — the s1mb specialist's CLASS SPACE: the sorted union of
 /// every PRESENTED key across BOTH halves (train + test), in the
 /// pick-space spelling [`suite_row`] labels speak. Gold is never read
@@ -1910,6 +1974,103 @@ mod tests {
         assert!(decode_artifact(&corrupt).is_err());
         // Truncation is refused.
         assert!(decode_artifact(&bytes[..bytes.len() - 8]).is_err());
+    }
+
+    // ── riir-train Issue 708: the serving-universe translation ───────────
+
+    #[test]
+    fn serving_translation_renames_int_labels_to_presentation_keys() {
+        // The xnli corpus spelling (suite_row's int law): "0"/"1"/"2" in
+        // class order (label_universe sorts, so the universe is ascending).
+        let translated = serving_label_universe(
+            "xnli_en",
+            &["0".to_string(), "1".to_string(), "2".to_string()],
+        )
+        .expect("the int spelling translates");
+        assert_eq!(
+            translated,
+            vec!["entailment", "neutral", "contradiction"],
+            "the rename lands at the SAME index — class rows never move"
+        );
+        assert_eq!(
+            serving_label_universe(
+                "ag_news",
+                &["0".to_string(), "1".to_string(), "2".to_string(), "3".to_string()]
+            )
+            .unwrap(),
+            vec!["world", "sports", "business", "sci_tech"]
+        );
+        assert_eq!(
+            serving_label_universe(
+                "emotion",
+                &[
+                    "0".to_string(),
+                    "1".to_string(),
+                    "2".to_string(),
+                    "3".to_string(),
+                    "4".to_string(),
+                    "5".to_string()
+                ]
+            )
+            .unwrap(),
+            vec!["sadness", "joy", "love", "anger", "fear", "surprise"]
+        );
+    }
+
+    #[test]
+    fn serving_translation_is_identity_outside_the_three_suites() {
+        // The byte-identity regression pin (Issue 708's sweep law): the
+        // name-labeled and int-seat suites export EXACTLY their input.
+        for suite in [
+            "banking77",
+            "sst5",
+            "massive_intent_en",
+            "prompt_injections",
+            "emotion_syn",
+            "typed_decisions",
+            "s1mb_choice",
+            "a_suite_that_does_not_exist",
+        ] {
+            let labels = vec!["0".to_string(), "1".to_string(), "2".to_string()];
+            assert_eq!(
+                serving_label_universe(suite, &labels).unwrap(),
+                labels,
+                "{suite} must export identity"
+            );
+        }
+    }
+
+    #[test]
+    fn serving_translation_refuses_loud_on_every_drift_shape() {
+        // Arity drift: a 4-class corpus over a 3-key table.
+        assert!(serving_label_universe(
+            "xnli_en",
+            &["0".to_string(), "1".to_string(), "2".to_string(), "3".to_string()]
+        )
+        .is_err());
+        // Non-int spelling (already named — the exporter ran twice).
+        assert!(serving_label_universe(
+            "xnli_en",
+            &[
+                "entailment".to_string(),
+                "neutral".to_string(),
+                "contradiction".to_string()
+            ]
+        )
+        .is_err());
+        // Out-of-range int.
+        assert!(serving_label_universe(
+            "xnli_en",
+            &["0".to_string(), "1".to_string(), "9".to_string()]
+        )
+        .is_err());
+        // Index identity broken: label_universe sorts, so an unsorted raw
+        // universe ("2" first) must refuse rather than rename wrongly.
+        assert!(serving_label_universe(
+            "xnli_en",
+            &["2".to_string(), "0".to_string(), "1".to_string()]
+        )
+        .is_err());
     }
 
     // ── Issue 623 T5 riders (Research 464 §2.1 / §3) ──────────────────────

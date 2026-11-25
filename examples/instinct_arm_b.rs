@@ -29,6 +29,7 @@
 
 use riir_instinct::instinct_specialist::{
     bag_into, decode_artifact, encode_artifact, label_universe, load_suite_rows, load_teacher_dump,
+    serving_label_universe,
     s1mb_presented_union, stratified_holdout, train_arm_a, train_arm_b, ArmAConfig, ArmBConfig,
     Specialist,
 };
@@ -469,8 +470,25 @@ fn main() {
             continue;
         }
         // T4: the winner ships as a sealed frozen artifact (the
-        // rule_embed_frozen law; decode-verified by its producer).
-        let bytes = encode_artifact(suite, &winner.model);
+        // rule_embed_frozen law; decode-verified by its producer). The
+        // label universe crosses the serving-universe translation first
+        // (riir-train Issue 708): the int-spelled classification suites
+        // export the SEAT's option-key names — a verbatim export is the
+        // unjoinable artifact `seat_join`'s Issue-027 mirror guard refuses
+        // at boot (measured: the 2026-10-19 T4 pipeline died at
+        // `stage_seat` on exactly this). Class rows never move: the
+        // translation is a pure rename at the same index, so the model's
+        // weights ride untouched.
+        let mut export_model = winner.model.clone();
+        export_model.labels = match serving_label_universe(suite, &export_model.labels) {
+            Ok(labels) => labels,
+            Err(e) => {
+                eprintln!("  {suite}: SERVING-UNIVERSE TRANSLATION FAILED — {e}");
+                failures += 1;
+                continue;
+            }
+        };
+        let bytes = encode_artifact(suite, &export_model);
         if let Err(e) = decode_artifact(&bytes) {
             eprintln!("  {suite}: ARTIFACT SELF-CHECK FAILED — {e}");
             failures += 1;
