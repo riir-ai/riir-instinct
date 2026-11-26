@@ -240,12 +240,20 @@ budget  = { load = "eager", max_payload_mb = 16 }
 # LCB leg NEGATIVE — lcb_floor none is EXPLICIT, the sst5 precedent's
 # disclosed-marginal-support shape). The think head is the plan-015
 # encoder fit (staged as emotion_syn_encoder_head_v1.bin, the preflight
-# convention name); the digest is the fit's blake3.
+# convention name); the digest is the fit's blake3. **v2 (i067 T4,
+# 2026-11-26): the v1 head is feature-mis-aligned at the post-954b27be
+# encode (fix(1239) re-semantics'd EncodedQuestion.hidden — the head
+# saturates to always-pick-4, think 0.17); the re-mint against the
+# post-fix features earns the swap (holdout 0.8050 > ref 0.7350, the
+# v1 fit's own 0.7600 number) and the extractor-probe sidecar pins the
+# post-fix feature extractor (6/6 gold-class picks, varied scores) —
+# the probe row is the drift tripwire the digest pin cannot be
+# (bytes are digest-stable across a forward-path re-semantics).**
 [[vessel]]
 suite   = "emotion_syn"
 class   = "hosted_only"
 posture = { arm = "A0" }                                          # the seated incumbent cheap leg (plan 015 R1: the selected-posture modelless 0.6925 — Bench 061 measured the bag class OUT at the corrected floor)
-escalate = { think_file = "emotion_syn_encoder_head_v1.bin", think_digest = "blake3:4002c471f73f42b7b843fe18863ffbec7625f4f58aed2dcb961aa2db3da0d098", margin = 0.05, min_rate = 0.15, max_rate = 0.60 }
+escalate = { think_file = "emotion_syn_encoder_head_v2.bin", think_digest = "blake3:d7b2e1e59b4740e1e7f593b1b500d1666a277fcfdb7221d87deafd96157adfac", margin = 0.05, min_rate = 0.15, max_rate = 0.60 }
 pin_keys = []
 budget  = { load = "eager", max_payload_mb = 16 }
 
@@ -416,7 +424,7 @@ fn arsenal_manifest_bytes_are_pinned_byte_for_byte() {
 /// them); the lockstep rethink-side pins (esc_gates 22/22 + ESC_POSTURES +
 /// ESC_GATE_RHOS) landed in the same family.
 const PINNED_PRODUCTION_MANIFEST_DIGEST: &str =
-    "blake3:84f539bdd4fa9a5f6a16d51569591459e571a8b7539ec56965e868185e6a9ce3";
+    "blake3:5e9f57d1096f0adff9aa42d3c98d492f63e263e02fd548167343173080b65868";
 
 #[test]
 fn production_manifest_bytes_are_pinned_byte_for_byte() {
@@ -2237,8 +2245,8 @@ fn emotion_syn_esc_served_shape_manifest() -> ArsenalManifest {
         "suite   = \"emotion_syn\"\n",
         "class   = \"hosted_only\"\n",
         "posture = { arm = \"A0\" }\n",
-        "escalate = { think_file = \"emotion_syn_encoder_head_v1.bin\", ",
-        "think_digest = \"blake3:4002c471f73f42b7b843fe18863ffbec7625f4f58aed2dcb961aa2db3da0d098\", ",
+        "escalate = { think_file = \"emotion_syn_encoder_head_v2.bin\", ",
+        "think_digest = \"blake3:d7b2e1e59b4740e1e7f593b1b500d1666a277fcfdb7221d87deafd96157adfac\", ",
         "margin = 0.05, min_rate = 0.15, max_rate = 0.60 }\n",
         "pin_keys = []\n",
         "budget  = { load = \"eager\", max_payload_mb = 16 }\n",
