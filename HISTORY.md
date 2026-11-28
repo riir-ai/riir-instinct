@@ -2,6 +2,10 @@
 
 Compacted 2026-11-20: every heading kept verbatim, bodies <=2 lines of durable facts (pre-2026-10-30 entries compacted earlier); full pre-compaction text in git history (pre-compaction HEAD 96b600f). Operational rules live in `AGENTS.md`.
 
+## 2026-11-28 — Issue 033 CLOSED (superseded): the ENC think-leg-at-chance defect root-caused, fixed, and guarded by the rethink 067 ladder
+
+Resolved. The pointer's whole ladder (T-A…T-E) landed under rethink `.issues/067` (CLOSED + removed `b4e34f3`; its HISTORY row is the record): mover = `954b27be` (the sst5 C1 head mis-alignment; the katgpt half exonerated by Arm A); fix = the emotion_syn think-head v2 re-mint + manifest move in two media (rethink `6da28b6` + this repo `1c99ee4`, the A6 byte pin; probe 6/6 live, think 0.8050 restored, C3 NI true, PROMOTE-ELIGIBLE w/ the §4 caveat). Standing regression rows: the `<head>.probe` extractor-probe sidecar (the think-head family) + rethink's `serve_encoder_parity` hard-count gate (proven loud — it REDS 104/600 on the benchmark-only head). Residual owned elsewhere: the sst5 C1 re-mint-or-refreeze decision = riir-train Issue 721.
+
 ## 2026-11-20 — Issue 030 RESOLVED: `riir-ledger` stays private; the seat's wire tier vendored in-tree (`ledgerplane`) — the public clone builds
 
 Resolved. riir-ledger stays private (owner call); the drain seat's wire tier is vendored at `src/ledgerplane/` (provenance @ `687aa8ffd7d8`), sole write path `scripts/vendor_ledgerplane.sh`, drift pinned by `tests/ledgerplane_parity.rs`.
